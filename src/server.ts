@@ -7,14 +7,13 @@ const app = express();
 app.use(express.json());
 
 const connectDB = async () => {
-    try{
-        await AppDataSource.initialize();
-        console.log(colors.magenta.bold("Database connected successfully"));
-    }
-    catch(error){
-        console.log(colors.red.bold(`Database connection failed: ${error}`));
-    }
-}
+  try {
+    await AppDataSource.initialize();
+    console.log(colors.magenta.bold("Database connected successfully"));
+  } catch (error) {
+    console.log(colors.red.bold(`Database connection failed: ${error}`));
+  }
+};
 
 connectDB();
 

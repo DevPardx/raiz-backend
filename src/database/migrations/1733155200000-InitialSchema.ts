@@ -5,18 +5,14 @@ export class InitialSchema1733155200000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Enable UUID extension
-    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+    await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
     // Create ENUM types
+    await queryRunner.query("CREATE TYPE \"user_role\" AS ENUM ('buyer', 'seller')");
     await queryRunner.query(
-      `CREATE TYPE "user_role" AS ENUM ('buyer', 'seller')`,
+      "CREATE TYPE \"property_type\" AS ENUM ('house', 'apartment', 'land', 'commercial', 'warehouse')",
     );
-    await queryRunner.query(
-      `CREATE TYPE "property_type" AS ENUM ('house', 'apartment', 'land', 'commercial', 'warehouse')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "property_status" AS ENUM ('active', 'paused', 'sold')`,
-    );
+    await queryRunner.query("CREATE TYPE \"property_status\" AS ENUM ('active', 'paused', 'sold')");
 
     // Create users table
     await queryRunner.query(`
@@ -190,110 +186,96 @@ export class InitialSchema1733155200000 implements MigrationInterface {
         `);
 
     // Create indexes for users
-    await queryRunner.query(
-      `CREATE INDEX "idx_users_email" ON "users" ("email")`,
-    );
-    await queryRunner.query(`CREATE INDEX "idx_users_role" ON "users" ("role")`);
+    await queryRunner.query('CREATE INDEX "idx_users_email" ON "users" ("email")');
+    await queryRunner.query('CREATE INDEX "idx_users_role" ON "users" ("role")');
 
     // Create indexes for properties
+    await queryRunner.query('CREATE INDEX "idx_properties_user_id" ON "properties" ("user_id")');
+    await queryRunner.query('CREATE INDEX "idx_properties_status" ON "properties" ("status")');
     await queryRunner.query(
-      `CREATE INDEX "idx_properties_user_id" ON "properties" ("user_id")`,
+      'CREATE INDEX "idx_properties_created_at" ON "properties" ("created_at" DESC)',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_properties_status" ON "properties" ("status")`,
+      'CREATE INDEX "idx_properties_location" ON "properties" ("department", "municipality")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_properties_created_at" ON "properties" ("created_at" DESC)`,
+      'CREATE INDEX "idx_properties_geolocation" ON "properties" ("latitude", "longitude")',
+    );
+    await queryRunner.query('CREATE INDEX "idx_properties_price" ON "properties" ("price")');
+    await queryRunner.query('CREATE INDEX "idx_properties_type" ON "properties" ("property_type")');
+    await queryRunner.query(
+      'CREATE INDEX "idx_properties_search" ON "properties" USING GIN("search_vector")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_properties_location" ON "properties" ("department", "municipality")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_properties_geolocation" ON "properties" ("latitude", "longitude")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_properties_price" ON "properties" ("price")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_properties_type" ON "properties" ("property_type")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_properties_search" ON "properties" USING GIN("search_vector")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_properties_active" ON "properties" ("created_at" DESC) WHERE "deleted_at" IS NULL`,
+      'CREATE INDEX "idx_properties_active" ON "properties" ("created_at" DESC) WHERE "deleted_at" IS NULL',
     );
 
     // Create indexes for property_images
     await queryRunner.query(
-      `CREATE INDEX "idx_property_images_property_id" ON "property_images" ("property_id")`,
+      'CREATE INDEX "idx_property_images_property_id" ON "property_images" ("property_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_property_images_display_order" ON "property_images" ("property_id", "display_order")`,
+      'CREATE INDEX "idx_property_images_display_order" ON "property_images" ("property_id", "display_order")',
     );
 
     // Create indexes for favorites
+    await queryRunner.query('CREATE INDEX "idx_favorites_user_id" ON "favorites" ("user_id")');
     await queryRunner.query(
-      `CREATE INDEX "idx_favorites_user_id" ON "favorites" ("user_id")`,
+      'CREATE INDEX "idx_favorites_property_id" ON "favorites" ("property_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_favorites_property_id" ON "favorites" ("property_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_favorites_created_at" ON "favorites" ("created_at" DESC)`,
+      'CREATE INDEX "idx_favorites_created_at" ON "favorites" ("created_at" DESC)',
     );
 
     // Create indexes for conversations
     await queryRunner.query(
-      `CREATE INDEX "idx_conversations_buyer_id" ON "conversations" ("buyer_id")`,
+      'CREATE INDEX "idx_conversations_buyer_id" ON "conversations" ("buyer_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_conversations_seller_id" ON "conversations" ("seller_id")`,
+      'CREATE INDEX "idx_conversations_seller_id" ON "conversations" ("seller_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_conversations_property_id" ON "conversations" ("property_id")`,
+      'CREATE INDEX "idx_conversations_property_id" ON "conversations" ("property_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_conversations_updated_at" ON "conversations" ("updated_at" DESC)`,
+      'CREATE INDEX "idx_conversations_updated_at" ON "conversations" ("updated_at" DESC)',
     );
 
     // Create indexes for messages
     await queryRunner.query(
-      `CREATE INDEX "idx_messages_conversation_id" ON "messages" ("conversation_id")`,
+      'CREATE INDEX "idx_messages_conversation_id" ON "messages" ("conversation_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_messages_created_at" ON "messages" ("conversation_id", "created_at" DESC)`,
+      'CREATE INDEX "idx_messages_created_at" ON "messages" ("conversation_id", "created_at" DESC)',
     );
+    await queryRunner.query('CREATE INDEX "idx_messages_sender_id" ON "messages" ("sender_id")');
     await queryRunner.query(
-      `CREATE INDEX "idx_messages_sender_id" ON "messages" ("sender_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_messages_is_read" ON "messages" ("conversation_id", "is_read") WHERE "is_read" = FALSE`,
+      'CREATE INDEX "idx_messages_is_read" ON "messages" ("conversation_id", "is_read") WHERE "is_read" = FALSE',
     );
 
     // Create indexes for refresh_tokens
     await queryRunner.query(
-      `CREATE INDEX "idx_refresh_tokens_user_id" ON "refresh_tokens" ("user_id")`,
+      'CREATE INDEX "idx_refresh_tokens_user_id" ON "refresh_tokens" ("user_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_refresh_tokens_expires_at" ON "refresh_tokens" ("expires_at")`,
+      'CREATE INDEX "idx_refresh_tokens_expires_at" ON "refresh_tokens" ("expires_at")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_refresh_tokens_token" ON "refresh_tokens" ("token")`,
+      'CREATE INDEX "idx_refresh_tokens_token" ON "refresh_tokens" ("token")',
     );
 
     // Create indexes for verification_tokens
     await queryRunner.query(
-      `CREATE INDEX "idx_verification_tokens_user_id" ON "verification_tokens" ("user_id")`,
+      'CREATE INDEX "idx_verification_tokens_user_id" ON "verification_tokens" ("user_id")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_verification_tokens_token" ON "verification_tokens" ("token")`,
+      'CREATE INDEX "idx_verification_tokens_token" ON "verification_tokens" ("token")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_verification_tokens_expires_at" ON "verification_tokens" ("expires_at")`,
+      'CREATE INDEX "idx_verification_tokens_expires_at" ON "verification_tokens" ("expires_at")',
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_verification_tokens_is_used" ON "verification_tokens" ("user_id", "is_used") WHERE "is_used" = FALSE`,
+      'CREATE INDEX "idx_verification_tokens_is_used" ON "verification_tokens" ("user_id", "is_used") WHERE "is_used" = FALSE',
     );
 
     // Create function to update updated_at timestamp
@@ -351,148 +333,122 @@ export class InitialSchema1733155200000 implements MigrationInterface {
 
     // Add table comments
     await queryRunner.query(
-      `COMMENT ON TABLE "users" IS 'Stores user accounts for buyers and sellers'`,
+      "COMMENT ON TABLE \"users\" IS 'Stores user accounts for buyers and sellers'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "properties" IS 'Stores property listings with soft delete support'`,
+      "COMMENT ON TABLE \"properties\" IS 'Stores property listings with soft delete support'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "property_images" IS 'Stores multiple images per property'`,
+      "COMMENT ON TABLE \"property_images\" IS 'Stores multiple images per property'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "favorites" IS 'Junction table for user favorite properties'`,
+      "COMMENT ON TABLE \"favorites\" IS 'Junction table for user favorite properties'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "conversations" IS 'Stores chat conversations between buyers and sellers'`,
+      "COMMENT ON TABLE \"conversations\" IS 'Stores chat conversations between buyers and sellers'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "messages" IS 'Stores individual messages within conversations'`,
+      "COMMENT ON TABLE \"messages\" IS 'Stores individual messages within conversations'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "push_subscriptions" IS 'Stores web push notification subscriptions'`,
+      "COMMENT ON TABLE \"push_subscriptions\" IS 'Stores web push notification subscriptions'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "refresh_tokens" IS 'Stores JWT refresh tokens for authentication'`,
+      "COMMENT ON TABLE \"refresh_tokens\" IS 'Stores JWT refresh tokens for authentication'",
     );
     await queryRunner.query(
-      `COMMENT ON TABLE "verification_tokens" IS 'Stores 6-digit verification tokens for account confirmation (expires in 15 minutes)'`,
+      "COMMENT ON TABLE \"verification_tokens\" IS 'Stores 6-digit verification tokens for account confirmation (expires in 15 minutes)'",
     );
 
     // Add column comments
     await queryRunner.query(
-      `COMMENT ON COLUMN "properties"."search_vector" IS 'Full-text search vector for property search'`,
+      'COMMENT ON COLUMN "properties"."search_vector" IS \'Full-text search vector for property search\'',
     );
     await queryRunner.query(
-      `COMMENT ON COLUMN "properties"."deleted_at" IS 'Soft delete timestamp - NULL means not deleted'`,
+      'COMMENT ON COLUMN "properties"."deleted_at" IS \'Soft delete timestamp - NULL means not deleted\'',
     );
     await queryRunner.query(
-      `COMMENT ON COLUMN "properties"."views_count" IS 'Number of times property detail page was viewed'`,
+      'COMMENT ON COLUMN "properties"."views_count" IS \'Number of times property detail page was viewed\'',
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop triggers
+    await queryRunner.query('DROP TRIGGER IF EXISTS properties_search_update ON "properties"');
     await queryRunner.query(
-      `DROP TRIGGER IF EXISTS properties_search_update ON "properties"`,
+      'DROP TRIGGER IF EXISTS update_conversations_updated_at ON "conversations"',
     );
-    await queryRunner.query(
-      `DROP TRIGGER IF EXISTS update_conversations_updated_at ON "conversations"`,
-    );
-    await queryRunner.query(
-      `DROP TRIGGER IF EXISTS update_properties_updated_at ON "properties"`,
-    );
-    await queryRunner.query(
-      `DROP TRIGGER IF EXISTS update_users_updated_at ON "users"`,
-    );
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_properties_updated_at ON "properties"');
+    await queryRunner.query('DROP TRIGGER IF EXISTS update_users_updated_at ON "users"');
 
     // Drop functions
-    await queryRunner.query(`DROP FUNCTION IF EXISTS properties_search_trigger()`);
-    await queryRunner.query(
-      `DROP FUNCTION IF EXISTS update_updated_at_column()`,
-    );
+    await queryRunner.query("DROP FUNCTION IF EXISTS properties_search_trigger()");
+    await queryRunner.query("DROP FUNCTION IF EXISTS update_updated_at_column()");
 
     // Drop indexes for verification_tokens
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_verification_tokens_is_used"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_verification_tokens_expires_at"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_verification_tokens_token"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_verification_tokens_user_id"`,
-    );
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_verification_tokens_is_used"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_verification_tokens_expires_at"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_verification_tokens_token"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_verification_tokens_user_id"');
 
     // Drop indexes for refresh_tokens
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_refresh_tokens_token"`);
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_refresh_tokens_expires_at"`,
-    );
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_refresh_tokens_user_id"`);
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_refresh_tokens_token"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_refresh_tokens_expires_at"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_refresh_tokens_user_id"');
 
     // Drop indexes for messages
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_messages_is_read"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_messages_sender_id"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_messages_created_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_messages_conversation_id"`);
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_messages_is_read"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_messages_sender_id"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_messages_created_at"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_messages_conversation_id"');
 
     // Drop indexes for conversations
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_conversations_updated_at"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_conversations_property_id"`,
-    );
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_conversations_seller_id"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_conversations_buyer_id"`);
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_conversations_updated_at"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_conversations_property_id"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_conversations_seller_id"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_conversations_buyer_id"');
 
     // Drop indexes for favorites
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_favorites_created_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_favorites_property_id"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_favorites_user_id"`);
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_favorites_created_at"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_favorites_property_id"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_favorites_user_id"');
 
     // Drop indexes for property_images
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_property_images_display_order"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_property_images_property_id"`,
-    );
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_property_images_display_order"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_property_images_property_id"');
 
     // Drop indexes for properties
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_active"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_search"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_type"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_price"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_geolocation"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_location"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_created_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_status"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_properties_user_id"`);
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_active"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_search"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_type"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_price"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_geolocation"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_location"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_created_at"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_status"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_properties_user_id"');
 
     // Drop indexes for users
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_users_role"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_users_email"`);
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_users_role"');
+    await queryRunner.query('DROP INDEX IF EXISTS "idx_users_email"');
 
     // Drop tables in reverse order
-    await queryRunner.query(`DROP TABLE IF EXISTS "verification_tokens"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "refresh_tokens"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "push_subscriptions"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "messages"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "conversations"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "favorites"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "property_images"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "properties"`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
+    await queryRunner.query('DROP TABLE IF EXISTS "verification_tokens"');
+    await queryRunner.query('DROP TABLE IF EXISTS "refresh_tokens"');
+    await queryRunner.query('DROP TABLE IF EXISTS "push_subscriptions"');
+    await queryRunner.query('DROP TABLE IF EXISTS "messages"');
+    await queryRunner.query('DROP TABLE IF EXISTS "conversations"');
+    await queryRunner.query('DROP TABLE IF EXISTS "favorites"');
+    await queryRunner.query('DROP TABLE IF EXISTS "property_images"');
+    await queryRunner.query('DROP TABLE IF EXISTS "properties"');
+    await queryRunner.query('DROP TABLE IF EXISTS "users"');
 
     // Drop ENUM types
-    await queryRunner.query(`DROP TYPE IF EXISTS "property_status"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "property_type"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "user_role"`);
+    await queryRunner.query('DROP TYPE IF EXISTS "property_status"');
+    await queryRunner.query('DROP TYPE IF EXISTS "property_type"');
+    await queryRunner.query('DROP TYPE IF EXISTS "user_role"');
 
     // Drop UUID extension
-    await queryRunner.query(`DROP EXTENSION IF EXISTS "uuid-ossp"`);
+    await queryRunner.query('DROP EXTENSION IF EXISTS "uuid-ossp"');
   }
 }
