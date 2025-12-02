@@ -28,11 +28,17 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migration:generate": "ts-node ./node_modules/typeorm/cli.js migration:generate -d src/config/typeorm.config.ts",
+    "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create",
+    "migration:run": "ts-node ./node_modules/typeorm/cli.js migration:run -d src/config/typeorm.config.ts",
+    "migration:revert": "ts-node ./node_modules/typeorm/cli.js migration:revert -d src/config/typeorm.config.ts",
+    "migration:show": "ts-node ./node_modules/typeorm/cli.js migration:show -d src/config/typeorm.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/express": "^5.0.6",
+    "@types/node": "^24.10.1",
     "colors": "^1.4.0",
     "eslint": "^9.39.1",
     "jiti": "^2.6.1",
@@ -44,6 +50,9 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.27"
   }
 }
