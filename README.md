@@ -26,6 +26,7 @@ backend/
 │   ├── config/         # Configuration files
 │   ├── controllers/    # Request handlers
 │   ├── entities/       # Database models/entities
+│   ├── enums/          # Enumerations
 │   ├── middleware/     # Custom middleware
 │   ├── routes/         # API routes
 │   ├── services/       # Business logic
@@ -96,6 +97,11 @@ npm start
 | `npm run format` | Format code with Prettier |
 | `npm run format:check` | Check code formatting |
 | `npm run typecheck` | Type-check without emitting files |
+| `npm run migration:generate` | Generate a new database migration |
+| `npm run migration:create` | Create a new database migration |
+| `npm run migration:run` | Run database migrations |
+| `npm run migration:revert` | Revert the las database migration |
+| `npm run migration:show` | Show the status of database migrations |
 
 ## Development
 

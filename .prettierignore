@@ -30,3 +30,4 @@ yarn.lock
 *.sqlite
 *.db
 .DS_Store
+migrations
