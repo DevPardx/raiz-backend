@@ -1,9 +1,10 @@
 import express from "express";
 import { AppDataSource } from "./config/typeorm.config";
 import logger from "./utils/logger.util";
-import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
+
+app.use(express.json());
 
 const connectDB = async () => {
   try {
@@ -16,9 +17,5 @@ const connectDB = async () => {
 };
 
 connectDB();
-
-app.use(express.json());
-
-app.use(errorHandler);
 
 export default app;
