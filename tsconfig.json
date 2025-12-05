@@ -20,7 +20,9 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true
     },
     "include": ["src/**/*.ts"],
     "exclude": ["src/**/*.test.ts", "node_modules"]
