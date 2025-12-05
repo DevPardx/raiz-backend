@@ -1,12 +1,15 @@
+import "./i18n";
 import express from "express";
 import { AppDataSource } from "./config/typeorm.config";
 import logger from "./utils/logger.util";
 import { errorHandler } from "./middleware/error.middleware";
+import { languageMiddleware } from "./middleware/language.middleware";
 import authRoutes from "./routes/auth.route";
 
 const app = express();
 
 app.use(express.json());
+app.use(languageMiddleware);
 
 const connectDB = async () => {
   try {

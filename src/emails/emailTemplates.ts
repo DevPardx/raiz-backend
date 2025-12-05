@@ -1,10 +1,11 @@
+import { TFunction } from "i18next";
 import { RegisterUserEmail } from "../types/auth";
 
 export class EmailTemplates {
-  static verifyAccountTemplate = async (data: RegisterUserEmail) => {
+  static verifyAccountTemplate = async (data: RegisterUserEmail, t: TFunction) => {
     return `
             <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-            <html dir="ltr" lang="en">
+            <html dir="ltr" lang="${t("lng")}">
             <head>
                 <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
                 <meta name="x-apple-disable-message-reformatting" />
@@ -25,9 +26,9 @@ export class EmailTemplates {
                         <div
                         style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0"
                         data-skip-in-text="true">
-                        Raiz Email Verification
+                        ${t("verify_account_preview", { ns: "email" })}
                         <div>
-                           
+
                         </div>
                         </div>
                         <table
@@ -86,16 +87,11 @@ export class EmailTemplates {
                                             <td>
                                                 <h1
                                                 style="color:rgb(51,51,51);font-size:20px;font-weight:700;margin-bottom:15px">
-                                                Verify your email address
+                                                ${t("verify_account_title", { ns: "email" })}
                                                 </h1>
                                                 <p
                                                 style="font-size:14px;line-height:24px;color:rgb(51,51,51);margin-top:24px;margin-bottom:14px;margin-right:0;margin-left:0">
-                                                Thanks for starting the new Raíz account
-                                                creation process. We want to make sure
-                                                it&#x27;s really you. Please enter the
-                                                following verification code when prompted.
-                                                If you don&#x27;t want to create an
-                                                account, you can ignore this message.
+                                                ${t("verify_account_body", { ns: "email" })}
                                                 </p>
                                                 <table
                                                 align="center"
@@ -110,7 +106,7 @@ export class EmailTemplates {
                                                     <td>
                                                         <p
                                                         style="font-size:14px;line-height:24px;color:rgb(51,51,51);margin:0;font-weight:700;text-align:center;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
-                                                        Verification code
+                                                        ${t("verify_account_verification_code_label", { ns: "email" })}
                                                         </p>
                                                         <p
                                                         style="font-size:36px;line-height:24px;color:rgb(51,51,51);margin-bottom:10px;margin-top:10px;margin-right:0;margin-left:0;font-weight:700;text-align:center">
@@ -118,7 +114,7 @@ export class EmailTemplates {
                                                         </p>
                                                         <p
                                                         style="font-size:14px;line-height:24px;color:rgb(51,51,51);margin:0;text-align:center;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
-                                                            (This code is valid for 15 minutes)
+                                                            ${t("verify_account_code_validity", { ns: "email" })}
                                                         </p>
                                                     </td>
                                                     </tr>
@@ -143,9 +139,7 @@ export class EmailTemplates {
                                             <td>
                                                 <p
                                                 style="font-size:14px;line-height:24px;color:rgb(51,51,51);margin:0;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
-                                                Raíz will never email you
-                                                and ask you to disclose or verify your
-                                                password.
+                                                ${t("verify_account_security_note", { ns: "email" })}
                                                 </p>
                                             </td>
                                             </tr>
