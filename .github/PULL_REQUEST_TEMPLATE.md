@@ -1,4 +1,1 @@
 ## Description
-
-## Related Issue
-Closes #
