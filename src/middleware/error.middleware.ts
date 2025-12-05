@@ -10,6 +10,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
       console.log(`AppError [${err.statusCode}]: ${err.message}`);
     }
 
+    if (err.errors && err.errors.length > 0) {
+      return res.status(err.statusCode).json({
+        errors: err.errors,
+      });
+    }
+
     return res.status(err.statusCode).json({
       error: err.message,
     });

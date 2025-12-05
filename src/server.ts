@@ -1,6 +1,8 @@
 import express from "express";
 import { AppDataSource } from "./config/typeorm.config";
 import logger from "./utils/logger.util";
+import { errorHandler } from "./middleware/error.middleware";
+import authRoutes from "./routes/auth.route";
 
 const app = express();
 
@@ -17,5 +19,9 @@ const connectDB = async () => {
 };
 
 connectDB();
+
+app.use("/api/auth", authRoutes);
+
+app.use(errorHandler);
 
 export default app;

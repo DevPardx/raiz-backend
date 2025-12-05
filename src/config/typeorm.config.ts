@@ -12,7 +12,7 @@ export const AppDataSource = new DataSource({
   database: env.POSTGRES_DB,
   host: env.POSTGRES_HOST,
 
-  synchronize: isDevelopment,
+  synchronize: false,
 
   logging: isDevelopment ? ["error", "warn", "migration"] : ["error"],
 

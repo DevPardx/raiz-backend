@@ -35,6 +35,9 @@ export class User {
   @Column({ type: "text", nullable: true, name: "profile_picture" })
   profilePicture: string | null;
 
+  @Column({ type: "boolean", default: false })
+  verified: boolean;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 

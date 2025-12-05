@@ -13,6 +13,11 @@ interface EnvConfig {
 
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
+
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  SMTP_USER: string;
+  SMTP_PASS: string;
 }
 
 const requiredEnvVars: (keyof EnvConfig)[] = [
@@ -27,6 +32,11 @@ const requiredEnvVars: (keyof EnvConfig)[] = [
 
   "JWT_SECRET",
   "JWT_REFRESH_SECRET",
+
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASS",
 ];
 
 export function validateEnv(): void {
@@ -88,4 +98,9 @@ export const env: EnvConfig = {
 
   JWT_SECRET: process.env.JWT_SECRET!,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
+
+  SMTP_HOST: process.env.SMTP_HOST!,
+  SMTP_PORT: +process.env.SMTP_PORT!,
+  SMTP_USER: process.env.SMTP_USER!,
+  SMTP_PASS: process.env.SMTP_PASS!,
 };
