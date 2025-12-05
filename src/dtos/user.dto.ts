@@ -13,7 +13,7 @@ export class RegisterUserDto {
   @MinLength(6, { message: "Password must be at least 6 characters long" })
   password: string;
 
-  @IsEnum(UserRole, { message: 'Role must be "buyer" or "seller"' })
+  @IsEnum(UserRole, { message: "Role must be buyer or seller" })
   role: UserRole;
 }
 
