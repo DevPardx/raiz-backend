@@ -23,7 +23,7 @@ export class VerificationToken {
   @Column({ type: "varchar", length: 6 })
   token: string;
 
-  @Column({ type: "timestamp", name: "expires_at" })
+  @Column({ type: "timestamptz", name: "expires_at" })
   expiresAt: Date;
 
   @Column({ type: "boolean", default: false, name: "is_used" })

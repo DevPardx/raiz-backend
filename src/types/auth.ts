@@ -1,3 +1,3 @@
 export type RegisterUserEmail = {
-  token: number;
+  token: string;
 };

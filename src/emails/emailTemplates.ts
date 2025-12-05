@@ -67,7 +67,7 @@ export class EmailTemplates {
                                                 <img
                                                 alt="Raíz Logo"
                                                 height="45"
-                                                src="https://res.cloudinary.com/dlgry4fcv/image/upload/v1764892003/rai%CC%81z-logo_tlv9hx.svg"
+                                                src="https://res.cloudinary.com/dlgry4fcv/image/upload/v1764968695/logo-white_w3zhjt.svg"
                                                 style="display:block;outline:none;border:none;text-decoration:none"
                                                 width="75" />
                                             </td>

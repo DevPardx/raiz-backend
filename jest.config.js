@@ -10,6 +10,10 @@ module.exports = {
     "!src/**/*.d.ts",
     "!src/index.ts",
     "!src/database/migrations/**",
+    "!src/config/**",
+    "!src/emails/**",
+    "!src/server.ts",
+    "!src/routes/**"
   ],
   coverageDirectory: "coverage",
   clearMocks: true,

@@ -5,4 +5,4 @@ export const hashPassword = async (password: string) => {
   return bcrypt.hash(password, salt);
 };
 
-export const expiresIn = () => new Date(Date.now() + 60 * 15);
+export const expiresIn = (minutes: number = 15) => new Date(Date.now() + minutes * 60 * 1000);
