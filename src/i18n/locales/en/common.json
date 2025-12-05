@@ -1,12 +1,12 @@
 {
-  "internal_server_error": "Internal server error",
-  "validation_failed": "Validation failed",
-  "user_already_exists": "A user with this email already exists.",
-  "user_not_found": "User not found.",
-  "invalid_user_role": "Invalid user role.",
-  "invalid_value": "Invalid value",
-  "verification_email_sent": "We've sent an email to verify your account.",
-  "invalid_verification_code": "The verification code is invalid or has expired.",
-  "account_verified_successfully": "Your account has been verified successfully.",
-  "account_already_verified": "The account has already been verified."
+    "internal_server_error": "Internal server error",
+    "validation_failed": "Validation failed",
+    "user_already_exists": "A user with this email already exists.",
+    "user_not_found": "User not found.",
+    "invalid_user_role": "Invalid user role.",
+    "invalid_value": "Invalid value",
+    "verification_email_sent": "We've sent an email to verify your account.",
+    "invalid_verification_code": "The verification code is invalid or has expired.",
+    "account_verified_successfully": "Your account has been verified successfully.",
+    "account_already_verified": "The account has already been verified."
 }

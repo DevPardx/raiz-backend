@@ -9,11 +9,7 @@ router.post("/register", validateDto(RegisterUserDto), AuthController.register);
 
 router.post("/verify-account", validateDto(VerifyAccountDto), AuthController.verifyAccount);
 
-router.post(
-  "/resend-verification-code",
-  validateDto(ResendVerificationCodeDto),
-  AuthController.resendVerificationCode,
-);
+router.post("/resend-verification-code", validateDto(ResendVerificationCodeDto), AuthController.resendVerificationCode);
 
 // router.post("/login");
 // router.post("/logout");

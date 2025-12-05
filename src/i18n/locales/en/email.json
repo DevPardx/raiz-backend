@@ -1,9 +1,9 @@
 {
-  "verify_account_subject": "Verify your Raiz account",
-  "verify_account_preview": "Raiz Email Verification",
-  "verify_account_title": "Verify your email address",
-  "verify_account_body": "Thanks for starting the new Raiz account creation process. We want to make sure it's really you. Please enter the following verification code when prompted. If you don't want to create an account, you can ignore this message.",
-  "verify_account_verification_code_label": "Verification code",
-  "verify_account_code_validity": "(This code is valid for 15 minutes)",
-  "verify_account_security_note": "Raiz will never email you and ask you to disclose or verify your password."
+    "verify_account_subject": "Verify your Raiz account",
+    "verify_account_preview": "Raiz Email Verification",
+    "verify_account_title": "Verify your email address",
+    "verify_account_body": "Thanks for starting the new Raiz account creation process. We want to make sure it's really you. Please enter the following verification code when prompted. If you don't want to create an account, you can ignore this message.",
+    "verify_account_verification_code_label": "Verification code",
+    "verify_account_code_validity": "(This code is valid for 15 minutes)",
+    "verify_account_security_note": "Raiz will never email you and ask you to disclose or verify your password."
 }

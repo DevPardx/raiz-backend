@@ -2,46 +2,46 @@ import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from "class-validato
 import { UserRole } from "../enums";
 
 export class RegisterUserDto {
-  @IsEmail({}, { message: "validation:email_invalid" })
-  email: string;
+    @IsEmail({}, { message: "validation:email_invalid" })
+    email: string;
 
-  @IsString({ message: "validation:name_must_be_string" })
-  @MinLength(2, { message: "validation:name_min_length" })
-  name: string;
+    @IsString({ message: "validation:name_must_be_string" })
+    @MinLength(2, { message: "validation:name_min_length" })
+    name: string;
 
-  @IsString({ message: "validation:password_must_be_string" })
-  @MinLength(6, { message: "validation:password_min_length" })
-  password: string;
+    @IsString({ message: "validation:password_must_be_string" })
+    @MinLength(6, { message: "validation:password_min_length" })
+    password: string;
 
-  @IsEnum(UserRole, { message: "validation:role_invalid" })
-  role: UserRole;
+    @IsEnum(UserRole, { message: "validation:role_invalid" })
+    role: UserRole;
 }
 
 export class VerifyAccountDto {
-  @IsString({ message: "validation:verification_code_required" })
-  token: string;
+    @IsString({ message: "validation:verification_code_required" })
+    token: string;
 }
 
 export class ResendVerificationCodeDto {
-  @IsEmail({}, { message: "validation:email_invalid" })
-  email: string;
+    @IsEmail({}, { message: "validation:email_invalid" })
+    email: string;
 }
 
 export class LoginUserDto {
-  @IsEmail({}, { message: "validation:email_invalid" })
-  email: string;
+    @IsEmail({}, { message: "validation:email_invalid" })
+    email: string;
 
-  @IsString({ message: "validation:password_required" })
-  password: string;
+    @IsString({ message: "validation:password_required" })
+    password: string;
 }
 
 export class UpdateUserDto {
-  @IsOptional()
-  @IsString({ message: "validation:name_must_be_string" })
-  @MinLength(2, { message: "validation:name_min_length" })
-  name?: string;
+    @IsOptional()
+    @IsString({ message: "validation:name_must_be_string" })
+    @MinLength(2, { message: "validation:name_min_length" })
+    name?: string;
 
-  @IsOptional()
-  @IsString({ message: "validation:profile_picture_invalid" })
-  profilePicture?: string;
+    @IsOptional()
+    @IsString({ message: "validation:profile_picture_invalid" })
+    profilePicture?: string;
 }

@@ -1,11 +1,11 @@
 {
-  "email_invalid": "El correo electrónico debe ser válido",
-  "name_must_be_string": "El nombre debe ser una cadena de texto",
-  "name_min_length": "El nombre debe tener al menos {{min}} caracteres",
-  "password_must_be_string": "La contraseña debe ser una cadena de texto",
-  "password_min_length": "La contraseña debe tener al menos {{min}} caracteres",
-  "password_required": "La contraseña es requerida",
-  "role_invalid": "El rol debe ser comprador o vendedor",
-  "profile_picture_invalid": "La foto de perfil debe ser una URL válida",
-  "verification_code_required": "El código de verificación es requerido"
+    "email_invalid": "El correo electrónico debe ser válido",
+    "name_must_be_string": "El nombre debe ser una cadena de texto",
+    "name_min_length": "El nombre debe tener al menos {{min}} caracteres",
+    "password_must_be_string": "La contraseña debe ser una cadena de texto",
+    "password_min_length": "La contraseña debe tener al menos {{min}} caracteres",
+    "password_required": "La contraseña es requerida",
+    "role_invalid": "El rol debe ser comprador o vendedor",
+    "profile_picture_invalid": "La foto de perfil debe ser una URL válida",
+    "verification_code_required": "El código de verificación es requerido"
 }

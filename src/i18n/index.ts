@@ -14,39 +14,39 @@ export const DEFAULT_LANGUAGE: SupportedLanguage = "es";
 
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
-  namespace Express {
-    interface Request {
-      language: SupportedLanguage;
-      t: TFunction;
+    namespace Express {
+        interface Request {
+            language: SupportedLanguage;
+            t: TFunction;
+        }
     }
-  }
 }
 
 i18next.init({
-  lng: DEFAULT_LANGUAGE,
-  fallbackLng: DEFAULT_LANGUAGE,
-  supportedLngs: [...SUPPORTED_LANGUAGES],
-  ns: ["common", "validation", "email"],
-  defaultNS: "common",
-  resources: {
-    es: {
-      common: esCommon,
-      validation: esValidation,
-      email: esEmail,
+    lng: DEFAULT_LANGUAGE,
+    fallbackLng: DEFAULT_LANGUAGE,
+    supportedLngs: [...SUPPORTED_LANGUAGES],
+    ns: ["common", "validation", "email"],
+    defaultNS: "common",
+    resources: {
+        es: {
+            common: esCommon,
+            validation: esValidation,
+            email: esEmail,
+        },
+        en: {
+            common: enCommon,
+            validation: enValidation,
+            email: enEmail,
+        },
     },
-    en: {
-      common: enCommon,
-      validation: enValidation,
-      email: enEmail,
+    interpolation: {
+        escapeValue: false,
     },
-  },
-  interpolation: {
-    escapeValue: false,
-  },
 });
 
 export default i18next;
 
 export const getTranslator = (lang: SupportedLanguage) => {
-  return i18next.getFixedT(lang);
+    return i18next.getFixedT(lang);
 };

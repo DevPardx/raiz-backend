@@ -12,13 +12,13 @@ app.use(express.json());
 app.use(languageMiddleware);
 
 const connectDB = async () => {
-  try {
-    await AppDataSource.initialize();
-    logger.info("Database connected successfully");
-  } catch (error) {
-    logger.error(`Database connection failed: ${error}`);
-    process.exit(1);
-  }
+    try {
+        await AppDataSource.initialize();
+        logger.info("Database connected successfully");
+    } catch (error) {
+        logger.error(`Database connection failed: ${error}`);
+        process.exit(1);
+    }
 };
 
 connectDB();

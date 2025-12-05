@@ -1,9 +1,9 @@
 {
-  "verify_account_subject": "Verifica tu cuenta de Raíz",
-  "verify_account_preview": "Verificación de correo de Raíz",
-  "verify_account_title": "Verifica tu dirección de correo electrónico",
-  "verify_account_body": "Gracias por iniciar el proceso de creación de una nueva cuenta en Raíz. Queremos asegurarnos de que realmente eres tú. Por favor, ingresa el siguiente código de verificación cuando se te solicite. Si no deseas crear una cuenta, puedes ignorar este mensaje.",
-  "verify_account_verification_code_label": "Código de verificación",
-  "verify_account_code_validity": "(Este código es válido por 15 minutos)",
-  "verify_account_security_note": "Raíz nunca te enviará un correo electrónico pidiéndote que reveles o verifiques tu contraseña."
+    "verify_account_subject": "Verifica tu cuenta de Raíz",
+    "verify_account_preview": "Verificación de correo de Raíz",
+    "verify_account_title": "Verifica tu dirección de correo electrónico",
+    "verify_account_body": "Gracias por iniciar el proceso de creación de una nueva cuenta en Raíz. Queremos asegurarnos de que realmente eres tú. Por favor, ingresa el siguiente código de verificación cuando se te solicite. Si no deseas crear una cuenta, puedes ignorar este mensaje.",
+    "verify_account_verification_code_label": "Código de verificación",
+    "verify_account_code_validity": "(Este código es válido por 15 minutos)",
+    "verify_account_security_note": "Raíz nunca te enviará un correo electrónico pidiéndote que reveles o verifiques tu contraseña."
 }

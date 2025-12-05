@@ -1,14 +1,14 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
-  Index,
-  Unique,
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+    ManyToOne,
+    OneToMany,
+    JoinColumn,
+    Index,
+    Unique,
 } from "typeorm";
 import { User } from "./User.entity";
 import { Property } from "./Property.entity";
@@ -21,37 +21,37 @@ import { Messages } from "./Messages.entity";
 @Index("idx_conversations_property_id", ["propertyId"])
 @Index("idx_conversations_updated_at", ["updatedAt"])
 export class Conversation {
-  @PrimaryGeneratedColumn("uuid")
-  id: string;
+    @PrimaryGeneratedColumn("uuid")
+    id: string;
 
-  @Column({ type: "uuid", name: "property_id" })
-  propertyId: string;
+    @Column({ type: "uuid", name: "property_id" })
+    propertyId: string;
 
-  @Column({ type: "uuid", name: "buyer_id" })
-  buyerId: string;
+    @Column({ type: "uuid", name: "buyer_id" })
+    buyerId: string;
 
-  @Column({ type: "uuid", name: "seller_id" })
-  sellerId: string;
+    @Column({ type: "uuid", name: "seller_id" })
+    sellerId: string;
 
-  @CreateDateColumn({ name: "created_at" })
-  createdAt: Date;
+    @CreateDateColumn({ name: "created_at" })
+    createdAt: Date;
 
-  @UpdateDateColumn({ name: "updated_at" })
-  updatedAt: Date;
+    @UpdateDateColumn({ name: "updated_at" })
+    updatedAt: Date;
 
-  // Relations
-  @ManyToOne(() => Property, (property) => property.conversations, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "property_id" })
-  property: Property;
+    // Relations
+    @ManyToOne(() => Property, (property) => property.conversations, { onDelete: "CASCADE" })
+    @JoinColumn({ name: "property_id" })
+    property: Property;
 
-  @ManyToOne(() => User, (user) => user.buyerConversations, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "buyer_id" })
-  buyer: User;
+    @ManyToOne(() => User, (user) => user.buyerConversations, { onDelete: "CASCADE" })
+    @JoinColumn({ name: "buyer_id" })
+    buyer: User;
 
-  @ManyToOne(() => User, (user) => user.sellerConversations, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "seller_id" })
-  seller: User;
+    @ManyToOne(() => User, (user) => user.sellerConversations, { onDelete: "CASCADE" })
+    @JoinColumn({ name: "seller_id" })
+    seller: User;
 
-  @OneToMany(() => Messages, (message) => message.conversation)
-  messages: Messages[];
+    @OneToMany(() => Messages, (message) => message.conversation)
+    messages: Messages[];
 }
