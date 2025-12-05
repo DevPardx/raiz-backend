@@ -1,4 +1,5 @@
 import { Repository } from "typeorm";
+import { TFunction } from "i18next";
 import { User } from "../entities/User.entity";
 import { RegisterUserDto } from "../dtos/user.dto";
 import { ConflictError } from "../handler/error.handler";
@@ -19,17 +20,17 @@ export class AuthService {
     return AppDataSource.getRepository(VerificationToken);
   }
 
-  static register = async (userData: RegisterUserDto) => {
+  static register = async (userData: RegisterUserDto, t: TFunction) => {
     const { email, role } = userData;
 
     const userExists = await this.getUserRepository().findOneBy({ email });
 
     if (userExists) {
-      throw new ConflictError("A user with this email already exists.");
+      throw new ConflictError(t("user_already_exists"));
     }
 
     if (role !== UserRole.BUYER && role !== UserRole.SELLER) {
-      throw new ConflictError("Invalid user role.");
+      throw new ConflictError(t("invalid_user_role"));
     }
 
     userData.password = await hashPassword(userData.password);
@@ -45,12 +46,15 @@ export class AuthService {
     await transporter.sendMail({
       from: "<no-reply@raizsv.com>",
       to: user.email,
-      subject: "Verify your Raiz account",
-      html: await EmailTemplates.verifyAccountTemplate({
-        token: +verificationToken.token,
-      }),
+      subject: t("verify_account.subject", { ns: "email" }),
+      html: await EmailTemplates.verifyAccountTemplate(
+        {
+          token: +verificationToken.token,
+        },
+        t,
+      ),
     });
 
-    return "We've sent an email to verify your account.";
+    return t("verification_email_sent");
   };
 }

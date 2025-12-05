@@ -2,36 +2,36 @@ import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from "class-validato
 import { UserRole } from "../enums";
 
 export class RegisterUserDto {
-  @IsEmail({}, { message: "Email must be valid" })
+  @IsEmail({}, { message: "validation:email_invalid" })
   email: string;
 
-  @IsString({ message: "Name must be a string" })
-  @MinLength(2, { message: "Name must be at least 2 characters long" })
+  @IsString({ message: "validation:name_must_be_string" })
+  @MinLength(2, { message: "validation:name_min_length" })
   name: string;
 
-  @IsString({ message: "Password must be a string" })
-  @MinLength(6, { message: "Password must be at least 6 characters long" })
+  @IsString({ message: "validation:password_must_be_string" })
+  @MinLength(6, { message: "validation:password_min_length" })
   password: string;
 
-  @IsEnum(UserRole, { message: "Role must be buyer or seller" })
+  @IsEnum(UserRole, { message: "validation:role_invalid" })
   role: UserRole;
 }
 
 export class LoginUserDto {
-  @IsEmail({}, { message: "Email must be valid" })
+  @IsEmail({}, { message: "validation:email_invalid" })
   email: string;
 
-  @IsString({ message: "Password is required" })
+  @IsString({ message: "validation:password_required" })
   password: string;
 }
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsString({ message: "Name must be a string" })
-  @MinLength(2, { message: "Name must be at least 2 characters long" })
+  @IsString({ message: "validation:name_must_be_string" })
+  @MinLength(2, { message: "validation:name_min_length" })
   name?: string;
 
   @IsOptional()
-  @IsString({ message: "Profile picture must be a valid URL" })
+  @IsString({ message: "validation:profile_picture_invalid" })
   profilePicture?: string;
 }

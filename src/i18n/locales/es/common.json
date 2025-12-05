@@ -1,0 +1,8 @@
+{
+  "internal_server_error": "Error interno del servidor",
+  "validation_failed": "Validación fallida",
+  "user_already_exists": "Ya existe un usuario con este correo electrónico.",
+  "invalid_user_role": "Rol de usuario inválido.",
+  "invalid_value": "Valor inválido.",
+  "verification_email_sent": "Hemos enviado un correo electrónico para verificar tu cuenta."
+}
