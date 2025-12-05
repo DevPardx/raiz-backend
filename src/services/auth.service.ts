@@ -1,8 +1,8 @@
 import { Repository } from "typeorm";
 import { TFunction } from "i18next";
 import { User } from "../entities/User.entity";
-import { RegisterUserDto } from "../dtos/user.dto";
-import { ConflictError } from "../handler/error.handler";
+import { RegisterUserDto, ResendVerificationCodeDto, VerifyAccountDto } from "../dtos/user.dto";
+import { BadRequestError, ConflictError, NotFoundError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
 import { UserRole } from "../enums";
 import { expiresIn, hashPassword } from "../utils/bcrypt.util";
@@ -46,10 +46,71 @@ export class AuthService {
     await transporter.sendMail({
       from: "<no-reply@raizsv.com>",
       to: user.email,
-      subject: t("verify_account.subject", { ns: "email" }),
+      subject: t("verify_account_subject", { ns: "email" }),
       html: await EmailTemplates.verifyAccountTemplate(
         {
-          token: +verificationToken.token,
+          token: verificationToken.token,
+        },
+        t,
+      ),
+    });
+
+    return t("verification_email_sent");
+  };
+
+  static verifyAccount = async (verifyAccountData: VerifyAccountDto, t: TFunction) => {
+    const { token } = verifyAccountData;
+
+    const tokenExists = await this.getVerificationTokenRepository().findOne({
+      where: { token },
+      relations: ["user"],
+    });
+
+    if (!tokenExists) {
+      throw new NotFoundError(t("invalid_verification_code"));
+    }
+
+    if (tokenExists.isUsed || tokenExists.expiresAt < new Date()) {
+      throw new BadRequestError(t("invalid_verification_code"));
+    }
+
+    const user = tokenExists.user;
+
+    user.verified = true;
+    await this.getUserRepository().save(user);
+
+    tokenExists.isUsed = true;
+    await this.getVerificationTokenRepository().save(tokenExists);
+
+    return t("account_verified_successfully");
+  };
+
+  static resendVerificationCode = async (resendData: ResendVerificationCodeDto, t: TFunction) => {
+    const { email } = resendData;
+
+    const user = await this.getUserRepository().findOneBy({ email });
+
+    if (!user) {
+      throw new NotFoundError(t("user_not_found"));
+    }
+
+    if (user.verified) {
+      throw new BadRequestError(t("account_already_verified"));
+    }
+
+    const verificationToken = new VerificationToken();
+    verificationToken.token = generateToken();
+    verificationToken.expiresAt = expiresIn();
+    verificationToken.userId = user.id;
+    await this.getVerificationTokenRepository().save(verificationToken);
+
+    await transporter.sendMail({
+      from: "<no-reply@raizsv.com>",
+      to: user.email,
+      subject: t("verify_account_subject", { ns: "email" }),
+      html: await EmailTemplates.verifyAccountTemplate(
+        {
+          token: verificationToken.token,
         },
         t,
       ),

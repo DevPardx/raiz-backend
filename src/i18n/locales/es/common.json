@@ -2,7 +2,11 @@
   "internal_server_error": "Error interno del servidor",
   "validation_failed": "Validación fallida",
   "user_already_exists": "Ya existe un usuario con este correo electrónico.",
+  "user_not_found": "Usuario no encontrado.",
   "invalid_user_role": "Rol de usuario inválido.",
   "invalid_value": "Valor inválido.",
-  "verification_email_sent": "Hemos enviado un correo electrónico para verificar tu cuenta."
+  "verification_email_sent": "Hemos enviado un correo electrónico para verificar tu cuenta.",
+  "invalid_verification_code": "El código de verificación no es válido o ha expirado.",
+  "account_verified_successfully": "Tu cuenta ha sido verificada exitosamente.",
+  "account_already_verified": "La cuenta ya ha sido verificada."
 }

@@ -17,6 +17,16 @@ export class RegisterUserDto {
   role: UserRole;
 }
 
+export class VerifyAccountDto {
+  @IsString({ message: "validation:verification_code_required" })
+  token: string;
+}
+
+export class ResendVerificationCodeDto {
+  @IsEmail({}, { message: "validation:email_invalid" })
+  email: string;
+}
+
 export class LoginUserDto {
   @IsEmail({}, { message: "validation:email_invalid" })
   email: string;

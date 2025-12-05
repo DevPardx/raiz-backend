@@ -6,5 +6,6 @@
   "password_min_length": "Password must be at least {{min}} characters long",
   "password_required": "Password is required",
   "role_invalid": "Role must be buyer or seller",
-  "profile_picture_invalid": "Profile picture must be a valid URL"
+  "profile_picture_invalid": "Profile picture must be a valid URL",
+  "verification_code_required": "Verification code is required"
 }

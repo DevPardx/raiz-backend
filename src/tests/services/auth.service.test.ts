@@ -233,10 +233,189 @@ describe("AuthService", () => {
       await AuthService.register(validUserData, mockT);
 
       // Assert
-      expect(mockT).toHaveBeenCalledWith("verify_account.subject", {
+      expect(mockT).toHaveBeenCalledWith("verify_account_subject", {
         ns: "email",
       });
       expect(transporter.sendMail).toHaveBeenCalled();
+    });
+  });
+
+  describe("verifyAccount", () => {
+    const validToken = "123456";
+
+    it("should verify account successfully", async () => {
+      // Arrange
+      const mockUser = {
+        id: "user-uuid-123",
+        email: "test@example.com",
+        verified: false,
+      };
+      const mockTokenData = {
+        id: "token-uuid-123",
+        token: validToken,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
+        isUsed: false,
+        user: mockUser,
+      };
+
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "VerificationToken") {
+          return {
+            findOne: jest.fn().mockResolvedValue(mockTokenData),
+            save: jest.fn().mockResolvedValue({ ...mockTokenData, isUsed: true }),
+          };
+        }
+        if (entity.name === "User") {
+          return {
+            save: jest.fn().mockResolvedValue({ ...mockUser, verified: true }),
+          };
+        }
+        return {};
+      });
+
+      // Act
+      const result = await AuthService.verifyAccount({ token: validToken }, mockT);
+
+      // Assert
+      expect(result).toBe("account_verified_successfully");
+    });
+
+    it("should throw NotFoundError for invalid token", async () => {
+      // Arrange
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "VerificationToken") {
+          return {
+            findOne: jest.fn().mockResolvedValue(null),
+          };
+        }
+        return {};
+      });
+
+      // Act & Assert
+      await expect(AuthService.verifyAccount({ token: "invalid-token" }, mockT)).rejects.toThrow();
+    });
+
+    it("should throw BadRequestError for expired token", async () => {
+      // Arrange
+      const mockTokenData = {
+        id: "token-uuid-123",
+        token: validToken,
+        expiresAt: new Date(Date.now() - 1000), // Expired 1 second ago
+        isUsed: false,
+        user: { id: "user-uuid-123" },
+      };
+
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "VerificationToken") {
+          return {
+            findOne: jest.fn().mockResolvedValue(mockTokenData),
+          };
+        }
+        return {};
+      });
+
+      // Act & Assert
+      await expect(AuthService.verifyAccount({ token: validToken }, mockT)).rejects.toThrow();
+    });
+
+    it("should throw BadRequestError for already used token", async () => {
+      // Arrange
+      const mockTokenData = {
+        id: "token-uuid-123",
+        token: validToken,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        isUsed: true,
+        user: { id: "user-uuid-123" },
+      };
+
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "VerificationToken") {
+          return {
+            findOne: jest.fn().mockResolvedValue(mockTokenData),
+          };
+        }
+        return {};
+      });
+
+      // Act & Assert
+      await expect(AuthService.verifyAccount({ token: validToken }, mockT)).rejects.toThrow();
+    });
+  });
+
+  describe("resendVerificationCode", () => {
+    const validEmail = "test@example.com";
+
+    it("should resend verification code successfully", async () => {
+      // Arrange
+      const mockUser = {
+        id: "user-uuid-123",
+        email: validEmail,
+        verified: false,
+      };
+
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "User") {
+          return {
+            findOneBy: jest.fn().mockResolvedValue(mockUser),
+          };
+        }
+        if (entity.name === "VerificationToken") {
+          return {
+            save: jest.fn().mockResolvedValue({
+              id: "token-uuid-456",
+              token: "654321",
+            }),
+          };
+        }
+        return {};
+      });
+
+      // Act
+      const result = await AuthService.resendVerificationCode({ email: validEmail }, mockT);
+
+      // Assert
+      expect(result).toBe("verification_email_sent");
+      expect(transporter.sendMail).toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundError for non-existent user", async () => {
+      // Arrange
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "User") {
+          return {
+            findOneBy: jest.fn().mockResolvedValue(null),
+          };
+        }
+        return {};
+      });
+
+      // Act & Assert
+      await expect(
+        AuthService.resendVerificationCode({ email: "nonexistent@example.com" }, mockT),
+      ).rejects.toThrow();
+    });
+
+    it("should throw BadRequestError for already verified user", async () => {
+      // Arrange
+      const mockUser = {
+        id: "user-uuid-123",
+        email: validEmail,
+        verified: true,
+      };
+
+      (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+        if (entity.name === "User") {
+          return {
+            findOneBy: jest.fn().mockResolvedValue(mockUser),
+          };
+        }
+        return {};
+      });
+
+      // Act & Assert
+      await expect(
+        AuthService.resendVerificationCode({ email: validEmail }, mockT),
+      ).rejects.toThrow();
     });
   });
 });
