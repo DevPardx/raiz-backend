@@ -32,6 +32,7 @@ jest.mock("../../utils/token.util", () => ({
 jest.mock("../../emails/emailTemplates", () => ({
     EmailTemplates: {
         verifyAccountTemplate: jest.fn().mockResolvedValue("<html>Email</html>"),
+        forgotPasswordEmailTemplate: jest.fn().mockResolvedValue("<html>Reset Email</html>"),
     },
 }));
 
@@ -48,7 +49,13 @@ jest.mock("../../utils/logger.util", () => ({
 import { errorHandler } from "../../middleware/error.middleware";
 import { languageMiddleware } from "../../middleware/language.middleware";
 import { validateDto } from "../../middleware/validation.middleware";
-import { RegisterUserDto, VerifyAccountDto, ResendVerificationCodeDto } from "../../dtos/user.dto";
+import {
+    RegisterUserDto,
+    VerifyAccountDto,
+    ResendVerificationCodeDto,
+    ForgotPasswordDto,
+    ResetPasswordDto,
+} from "../../dtos/user.dto";
 import { AuthController } from "../../controllers/auth.controller";
 import { Router } from "express";
 
@@ -539,6 +546,347 @@ describe("POST /api/auth/resend-verification-code", () => {
             const response = await request(app)
                 .post("/api/auth/resend-verification-code")
                 .send({ email: "test@example.com" });
+
+            expect(response.status).toBe(400);
+        });
+    });
+});
+
+describe("POST /api/auth/forgot-password", () => {
+    let app: express.Application;
+
+    const mockUserRepository = {
+        findOneBy: jest.fn(),
+    };
+
+    const mockVerificationTokenRepository = {
+        save: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.post(
+            "/forgot-password",
+            validateDto(ForgotPasswordDto),
+            AuthController.forgotPassword,
+        );
+        app.use("/api/auth", router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "User") {
+                return mockUserRepository;
+            }
+            if (entity.name === "VerificationToken") {
+                return mockVerificationTokenRepository;
+            }
+            return {};
+        });
+
+        (transporter.sendMail as jest.Mock).mockResolvedValue({ messageId: "123" });
+    });
+
+    describe("successful request", () => {
+        it("should send reset password email and return 200", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: "test@example.com",
+            };
+
+            mockUserRepository.findOneBy.mockResolvedValue(mockUser);
+            mockVerificationTokenRepository.save.mockResolvedValue({
+                id: "token-uuid-456",
+                token: "123456",
+            });
+
+            // Act
+            const response = await request(app)
+                .post("/api/auth/forgot-password")
+                .send({ email: "test@example.com" });
+
+            // Assert
+            expect(response.status).toBe(200);
+            expect(typeof response.body).toBe("string");
+            expect(transporter.sendMail).toHaveBeenCalled();
+        });
+    });
+
+    describe("validation errors", () => {
+        it("should return 400 for invalid email", async () => {
+            const response = await request(app)
+                .post("/api/auth/forgot-password")
+                .send({ email: "invalid-email" });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for missing email", async () => {
+            const response = await request(app).post("/api/auth/forgot-password").send({});
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+    });
+
+    describe("not found errors", () => {
+        it("should return 404 for non-existent user", async () => {
+            mockUserRepository.findOneBy.mockResolvedValue(null);
+
+            const response = await request(app)
+                .post("/api/auth/forgot-password")
+                .send({ email: "nonexistent@example.com" });
+
+            expect(response.status).toBe(404);
+        });
+    });
+});
+
+describe("POST /api/auth/reset-password/:token", () => {
+    let app: express.Application;
+
+    const mockVerificationTokenRepository = {
+        findOne: jest.fn(),
+        save: jest.fn(),
+    };
+
+    const mockUserRepository = {
+        save: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.post(
+            "/reset-password/:token",
+            validateDto(ResetPasswordDto),
+            AuthController.resetPassword,
+        );
+        app.use("/api/auth", router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "VerificationToken") {
+                return mockVerificationTokenRepository;
+            }
+            if (entity.name === "User") {
+                return mockUserRepository;
+            }
+            return {};
+        });
+
+        (bcryptUtil.hashPassword as jest.Mock).mockResolvedValue("new_hashed_password");
+    });
+
+    describe("successful reset", () => {
+        it("should reset password and return 200", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: "test@example.com",
+                password: "old_hashed_password",
+            };
+            const mockToken = {
+                id: "token-uuid-123",
+                token: "123456",
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: false,
+                user: mockUser,
+            };
+
+            mockVerificationTokenRepository.findOne.mockResolvedValue(mockToken);
+            mockVerificationTokenRepository.save.mockResolvedValue({
+                ...mockToken,
+                isUsed: true,
+            });
+            mockUserRepository.save.mockResolvedValue({
+                ...mockUser,
+                password: "new_hashed_password",
+            });
+
+            // Act
+            const response = await request(app)
+                .post("/api/auth/reset-password/123456")
+                .send({ newPassword: "newPassword123" });
+
+            // Assert
+            expect(response.status).toBe(200);
+            expect(typeof response.body).toBe("string");
+        });
+    });
+
+    describe("validation errors", () => {
+        it("should return 400 for missing password", async () => {
+            const response = await request(app).post("/api/auth/reset-password/123456").send({});
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for short password", async () => {
+            const response = await request(app)
+                .post("/api/auth/reset-password/123456")
+                .send({ newPassword: "short" });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+    });
+
+    describe("not found errors", () => {
+        it("should return 404 for invalid token", async () => {
+            mockVerificationTokenRepository.findOne.mockResolvedValue(null);
+
+            const response = await request(app)
+                .post("/api/auth/reset-password/invalid-token")
+                .send({ newPassword: "newPassword123" });
+
+            expect(response.status).toBe(404);
+        });
+    });
+
+    describe("bad request errors", () => {
+        it("should return 400 for expired token", async () => {
+            const mockToken = {
+                id: "token-uuid-123",
+                token: "123456",
+                expiresAt: new Date(Date.now() - 1000),
+                isUsed: false,
+                user: { id: "user-uuid-123" },
+            };
+
+            mockVerificationTokenRepository.findOne.mockResolvedValue(mockToken);
+
+            const response = await request(app)
+                .post("/api/auth/reset-password/123456")
+                .send({ newPassword: "newPassword123" });
+
+            expect(response.status).toBe(400);
+        });
+
+        it("should return 400 for already used token", async () => {
+            const mockToken = {
+                id: "token-uuid-123",
+                token: "123456",
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: true,
+                user: { id: "user-uuid-123" },
+            };
+
+            mockVerificationTokenRepository.findOne.mockResolvedValue(mockToken);
+
+            const response = await request(app)
+                .post("/api/auth/reset-password/123456")
+                .send({ newPassword: "newPassword123" });
+
+            expect(response.status).toBe(400);
+        });
+    });
+});
+
+describe("GET /api/auth/reset-password/:token", () => {
+    let app: express.Application;
+
+    const mockVerificationTokenRepository = {
+        findOne: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.get("/reset-password/:token", AuthController.validateResetToken);
+        app.use("/api/auth", router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "VerificationToken") {
+                return mockVerificationTokenRepository;
+            }
+            return {};
+        });
+    });
+
+    describe("successful validation", () => {
+        it("should validate token and return 200", async () => {
+            // Arrange
+            const mockToken = {
+                id: "token-uuid-123",
+                token: "123456",
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: false,
+            };
+
+            mockVerificationTokenRepository.findOne.mockResolvedValue(mockToken);
+
+            // Act
+            const response = await request(app).get("/api/auth/reset-password/123456");
+
+            // Assert
+            expect(response.status).toBe(200);
+            expect(typeof response.body).toBe("string");
+        });
+    });
+
+    describe("not found errors", () => {
+        it("should return 404 for invalid token", async () => {
+            mockVerificationTokenRepository.findOne.mockResolvedValue(null);
+
+            const response = await request(app).get("/api/auth/reset-password/invalid-token");
+
+            expect(response.status).toBe(404);
+        });
+    });
+
+    describe("bad request errors", () => {
+        it("should return 400 for expired token", async () => {
+            const mockToken = {
+                id: "token-uuid-123",
+                token: "123456",
+                expiresAt: new Date(Date.now() - 1000),
+                isUsed: false,
+            };
+
+            mockVerificationTokenRepository.findOne.mockResolvedValue(mockToken);
+
+            const response = await request(app).get("/api/auth/reset-password/123456");
+
+            expect(response.status).toBe(400);
+        });
+
+        it("should return 400 for already used token", async () => {
+            const mockToken = {
+                id: "token-uuid-123",
+                token: "123456",
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: true,
+            };
+
+            mockVerificationTokenRepository.findOne.mockResolvedValue(mockToken);
+
+            const response = await request(app).get("/api/auth/reset-password/123456");
 
             expect(response.status).toBe(400);
         });

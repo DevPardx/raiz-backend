@@ -1,10 +1,16 @@
 import { Repository } from "typeorm";
 import { TFunction } from "i18next";
 import { User } from "../entities/User.entity";
-import { RegisterUserDto, ResendVerificationCodeDto, VerifyAccountDto } from "../dtos/user.dto";
+import {
+    ForgotPasswordDto,
+    RegisterUserDto,
+    ResendVerificationCodeDto,
+    ResetPasswordDto,
+    VerifyAccountDto,
+} from "../dtos/user.dto";
 import { BadRequestError, ConflictError, NotFoundError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
-import { UserRole } from "../enums";
+import { UserRole, TokenType } from "../enums";
 import { expiresIn, hashPassword } from "../utils/bcrypt.util";
 import { VerificationToken } from "../entities/VerificationToken.entity";
 import { generateToken } from "../utils/token.util";
@@ -39,6 +45,7 @@ export class AuthService {
 
         const verificationToken = new VerificationToken();
         verificationToken.token = generateToken();
+        verificationToken.type = TokenType.EMAIL_VERIFICATION;
         verificationToken.expiresAt = expiresIn();
         verificationToken.userId = user.id;
         await this.getVerificationTokenRepository().save(verificationToken);
@@ -62,7 +69,7 @@ export class AuthService {
         const { token } = verifyAccountData;
 
         const tokenExists = await this.getVerificationTokenRepository().findOne({
-            where: { token },
+            where: { token, type: TokenType.EMAIL_VERIFICATION },
             relations: ["user"],
         });
 
@@ -100,6 +107,7 @@ export class AuthService {
 
         const verificationToken = new VerificationToken();
         verificationToken.token = generateToken();
+        verificationToken.type = TokenType.EMAIL_VERIFICATION;
         verificationToken.expiresAt = expiresIn();
         verificationToken.userId = user.id;
         await this.getVerificationTokenRepository().save(verificationToken);
@@ -117,5 +125,78 @@ export class AuthService {
         });
 
         return t("verification_email_sent");
+    };
+
+    static forgotPassword = async (userData: ForgotPasswordDto, t: TFunction) => {
+        const { email } = userData;
+
+        const user = await this.getUserRepository().findOneBy({ email });
+
+        if (!user) {
+            throw new NotFoundError(t("user_not_found"));
+        }
+
+        const resetToken = new VerificationToken();
+        resetToken.token = generateToken();
+        resetToken.type = TokenType.PASSWORD_RESET;
+        resetToken.expiresAt = expiresIn(30); // 30 minutes for password reset
+        resetToken.userId = user.id;
+        await this.getVerificationTokenRepository().save(resetToken);
+
+        await transporter.sendMail({
+            from: "<no-reply@raizsv.com>",
+            to: user.email,
+            subject: t("forgot_password_subject", { ns: "email" }),
+            html: await EmailTemplates.forgotPasswordEmailTemplate(
+                {
+                    token: resetToken.token,
+                },
+                t,
+            ),
+        });
+
+        return t("reset_password_email_sent");
+    };
+
+    static resetPassword = async (token: string, resetData: ResetPasswordDto, t: TFunction) => {
+        const { newPassword } = resetData;
+
+        const resetToken = await this.getVerificationTokenRepository().findOne({
+            where: { token, type: TokenType.PASSWORD_RESET },
+            relations: ["user"],
+        });
+
+        if (!resetToken) {
+            throw new NotFoundError(t("invalid_reset_token"));
+        }
+
+        if (resetToken.isUsed || resetToken.expiresAt < new Date()) {
+            throw new BadRequestError(t("invalid_reset_token"));
+        }
+
+        const user = resetToken.user;
+        user.password = await hashPassword(newPassword);
+        await this.getUserRepository().save(user);
+
+        resetToken.isUsed = true;
+        await this.getVerificationTokenRepository().save(resetToken);
+
+        return t("password_reset_successfully");
+    };
+
+    static validateResetToken = async (token: string, t: TFunction) => {
+        const resetToken = await this.getVerificationTokenRepository().findOne({
+            where: { token, type: TokenType.PASSWORD_RESET },
+        });
+
+        if (!resetToken) {
+            throw new NotFoundError(t("invalid_reset_token"));
+        }
+
+        if (resetToken.isUsed || resetToken.expiresAt < new Date()) {
+            throw new BadRequestError(t("invalid_reset_token"));
+        }
+
+        return t("valid_reset_token");
     };
 }

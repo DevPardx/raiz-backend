@@ -5,5 +5,12 @@
     "verify_account_body": "Gracias por iniciar el proceso de creación de una nueva cuenta en Raíz. Queremos asegurarnos de que realmente eres tú. Por favor, ingresa el siguiente código de verificación cuando se te solicite. Si no deseas crear una cuenta, puedes ignorar este mensaje.",
     "verify_account_verification_code_label": "Código de verificación",
     "verify_account_code_validity": "(Este código es válido por 15 minutos)",
-    "verify_account_security_note": "Raíz nunca te enviará un correo electrónico pidiéndote que reveles o verifiques tu contraseña."
+    "verify_account_security_note": "Raíz nunca te enviará un correo electrónico pidiéndote que reveles o verifiques tu contraseña.",
+
+    "forgot_password_subject": "Reestablece tu contraseña en Raíz",
+    "forgot_password_preview": "Reestablecer tu contraseña en Raíz",
+    "forgot_password_title": "Restablece tu contraseña",
+    "forgot_password_body": "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta de Raíz. Por favor, visita el enlace a continuación para establecer una nueva contraseña. Si no solicitaste un restablecimiento de contraseña, ignora este correo electrónico.",
+    "forgot_password_verification_code_label": "Enlace de verificación",
+    "forgot_password_code_validity": "(Este enlace es válido por 15 minutos)"
 }

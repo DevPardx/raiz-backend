@@ -31,7 +31,10 @@ jest.mock("../../utils/token.util", () => ({
 
 jest.mock("../../emails/emailTemplates", () => ({
     EmailTemplates: {
-        verifyAccountTemplate: jest.fn().mockResolvedValue("<html>Email</html>"),
+        verifyAccountTemplate: jest.fn().mockResolvedValue("<html>Verify Email</html>"),
+        forgotPasswordEmailTemplate: jest
+            .fn()
+            .mockResolvedValue("<html>Reset Password Email</html>"),
     },
 }));
 
@@ -420,6 +423,257 @@ describe("AuthService", () => {
             await expect(
                 AuthService.resendVerificationCode({ email: validEmail }, mockT),
             ).rejects.toThrow();
+        });
+    });
+
+    describe("forgotPassword", () => {
+        const validEmail = "test@example.com";
+
+        it("should send reset password email successfully", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: validEmail,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOneBy: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                if (entity.name === "VerificationToken") {
+                    return {
+                        save: jest.fn().mockResolvedValue({
+                            id: "token-uuid-456",
+                            token: "123456",
+                        }),
+                    };
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.forgotPassword({ email: validEmail }, mockT);
+
+            // Assert
+            expect(result).toBe("reset_password_email_sent");
+            expect(transporter.sendMail).toHaveBeenCalled();
+        });
+
+        it("should throw NotFoundError for non-existent user", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOneBy: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(
+                AuthService.forgotPassword({ email: "nonexistent@example.com" }, mockT),
+            ).rejects.toThrow();
+        });
+    });
+
+    describe("resetPassword", () => {
+        const validToken = "123456";
+        const newPassword = "newPassword123";
+
+        it("should reset password successfully", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: "test@example.com",
+                password: "oldHashedPassword",
+            };
+            const mockResetToken = {
+                id: "token-uuid-123",
+                token: validToken,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: false,
+                user: mockUser,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockResetToken),
+                        save: jest.fn().mockResolvedValue({ ...mockResetToken, isUsed: true }),
+                    };
+                }
+                if (entity.name === "User") {
+                    return {
+                        save: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.resetPassword(validToken, { newPassword }, mockT);
+
+            // Assert
+            expect(result).toBe("password_reset_successfully");
+            expect(bcryptUtil.hashPassword).toHaveBeenCalledWith(newPassword);
+        });
+
+        it("should throw NotFoundError for invalid token", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(
+                AuthService.resetPassword("invalid-token", { newPassword }, mockT),
+            ).rejects.toThrow();
+        });
+
+        it("should throw BadRequestError for expired token", async () => {
+            // Arrange
+            const mockResetToken = {
+                id: "token-uuid-123",
+                token: validToken,
+                expiresAt: new Date(Date.now() - 1000),
+                isUsed: false,
+                user: { id: "user-uuid-123" },
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockResetToken),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(
+                AuthService.resetPassword(validToken, { newPassword }, mockT),
+            ).rejects.toThrow();
+        });
+
+        it("should throw BadRequestError for already used token", async () => {
+            // Arrange
+            const mockResetToken = {
+                id: "token-uuid-123",
+                token: validToken,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: true,
+                user: { id: "user-uuid-123" },
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockResetToken),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(
+                AuthService.resetPassword(validToken, { newPassword }, mockT),
+            ).rejects.toThrow();
+        });
+    });
+
+    describe("validateResetToken", () => {
+        const validToken = "123456";
+
+        it("should validate token successfully", async () => {
+            // Arrange
+            const mockResetToken = {
+                id: "token-uuid-123",
+                token: validToken,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: false,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockResetToken),
+                    };
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.validateResetToken(validToken, mockT);
+
+            // Assert
+            expect(result).toBe("valid_reset_token");
+        });
+
+        it("should throw NotFoundError for invalid token", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.validateResetToken("invalid-token", mockT)).rejects.toThrow();
+        });
+
+        it("should throw BadRequestError for expired token", async () => {
+            // Arrange
+            const mockResetToken = {
+                id: "token-uuid-123",
+                token: validToken,
+                expiresAt: new Date(Date.now() - 1000),
+                isUsed: false,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockResetToken),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.validateResetToken(validToken, mockT)).rejects.toThrow();
+        });
+
+        it("should throw BadRequestError for already used token", async () => {
+            // Arrange
+            const mockResetToken = {
+                id: "token-uuid-123",
+                token: validToken,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                isUsed: true,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "VerificationToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockResetToken),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.validateResetToken(validToken, mockT)).rejects.toThrow();
         });
     });
 });

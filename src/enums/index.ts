@@ -3,6 +3,11 @@ export enum UserRole {
     SELLER = "seller",
 }
 
+export enum TokenType {
+    EMAIL_VERIFICATION = "email_verification",
+    PASSWORD_RESET = "password_reset",
+}
+
 export enum PropertyType {
     HOUSE = "house",
     APARTMENT = "apartment",
