@@ -5,6 +5,7 @@
     "password_must_be_string": "Password must be a string",
     "password_min_length": "Password must be at least 8 characters long",
     "password_required": "Password is required",
+    "email_required": "Email is required",
     "role_invalid": "Role must be buyer or seller",
     "profile_picture_invalid": "Profile picture must be a valid URL",
     "verification_code_required": "Verification code is required"

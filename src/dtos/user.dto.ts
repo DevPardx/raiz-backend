@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from "class-validator";
+import { IsEmail, IsString, MinLength, IsEnum, IsOptional, IsNotEmpty } from "class-validator";
 import { UserRole } from "../enums";
 
 export class RegisterUserDto {
@@ -40,9 +40,11 @@ export class ResetPasswordDto {
 
 export class LoginUserDto {
     @IsEmail({}, { message: "validation:email_invalid" })
+    @IsNotEmpty({ message: "validation:email_required" })
     email: string;
 
     @IsString({ message: "validation:password_required" })
+    @IsNotEmpty({ message: "validation:password_required" })
     password: string;
 }
 

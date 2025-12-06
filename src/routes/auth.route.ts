@@ -2,6 +2,7 @@ import { Router } from "express";
 import { validateDto } from "../middleware/validation.middleware";
 import {
     ForgotPasswordDto,
+    LoginUserDto,
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
@@ -27,9 +28,12 @@ router.post("/reset-password/:token", validateDto(ResetPasswordDto), AuthControl
 
 router.get("/reset-password/:token", AuthController.validateResetToken);
 
-// router.post("/login");
-// router.post("/logout");
-// router.post("/refresh-token");
+router.post("/login", validateDto(LoginUserDto), AuthController.login);
+
+router.post("/logout", AuthController.logout);
+
+router.post("/refresh-token", AuthController.refreshToken);
+
 // router.post("/change-password");
 // router.put("/update-profile");
 // router.post("/confirm-password");

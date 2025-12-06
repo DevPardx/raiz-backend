@@ -22,11 +22,19 @@ jest.mock("../../config/email.config", () => ({
 
 jest.mock("../../utils/bcrypt.util", () => ({
     hashPassword: jest.fn(),
-    expiresIn: jest.fn(),
+    comparePassword: jest.fn(),
 }));
 
 jest.mock("../../utils/token.util", () => ({
     generateToken: jest.fn(),
+    generateJWT: jest.fn(),
+    generateRefreshToken: jest.fn(),
+    verifyRefreshToken: jest.fn(),
+}));
+
+jest.mock("../../utils", () => ({
+    tokenExpiresIn: jest.fn(),
+    refreshTokenExpiresIn: jest.fn(),
 }));
 
 jest.mock("../../emails/emailTemplates", () => ({
@@ -55,6 +63,7 @@ import {
     ResendVerificationCodeDto,
     ForgotPasswordDto,
     ResetPasswordDto,
+    LoginUserDto,
 } from "../../dtos/user.dto";
 import { AuthController } from "../../controllers/auth.controller";
 import { Router } from "express";
@@ -100,7 +109,6 @@ describe("POST /api/auth/register", () => {
 
         // Setup utility mocks
         (bcryptUtil.hashPassword as jest.Mock).mockResolvedValue("hashed_password");
-        (bcryptUtil.expiresIn as jest.Mock).mockReturnValue(new Date());
         (tokenUtil.generateToken as jest.Mock).mockReturnValue("123456");
         (transporter.sendMail as jest.Mock).mockResolvedValue({ messageId: "123" });
     });
@@ -890,5 +898,303 @@ describe("GET /api/auth/reset-password/:token", () => {
 
             expect(response.status).toBe(400);
         });
+    });
+});
+
+describe("POST /api/auth/login", () => {
+    let app: express.Application;
+
+    const mockUserRepository = {
+        findOneBy: jest.fn(),
+    };
+
+    const mockRefreshTokenRepository = {
+        save: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.post("/api/auth/login", validateDto(LoginUserDto), AuthController.login);
+        app.use(router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "User") {
+                return mockUserRepository;
+            }
+            if (entity.name === "RefreshToken") {
+                return mockRefreshTokenRepository;
+            }
+            return {};
+        });
+
+        (bcryptUtil.hashPassword as jest.Mock).mockResolvedValue("hashed_password");
+        (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(true);
+        (tokenUtil.generateJWT as jest.Mock).mockReturnValue("access_token_jwt");
+        (tokenUtil.generateRefreshToken as jest.Mock).mockReturnValue("refresh_token_jwt");
+        (transporter.sendMail as jest.Mock).mockResolvedValue({ messageId: "123" });
+    });
+
+    it("should login successfully", async () => {
+        const mockUser = {
+            id: "user-uuid-123",
+            email: "test@example.com",
+            password: "hashed_password",
+            name: "Test User",
+            role: UserRole.BUYER,
+            profilePicture: null,
+            verified: true,
+        };
+
+        mockUserRepository.findOneBy.mockResolvedValue(mockUser);
+        mockRefreshTokenRepository.save.mockResolvedValue({});
+
+        const response = await request(app).post("/api/auth/login").send({
+            email: "test@example.com",
+            password: "password123",
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("accessToken");
+        expect(response.body).toHaveProperty("refreshToken");
+    });
+
+    it("should return 400 for missing email", async () => {
+        const response = await request(app).post("/api/auth/login").send({
+            password: "password123",
+        });
+
+        expect(response.status).toBe(400);
+    });
+
+    it("should return 400 for missing password", async () => {
+        const response = await request(app).post("/api/auth/login").send({
+            email: "test@example.com",
+        });
+
+        expect(response.status).toBe(400);
+    });
+
+    it("should return 400 for invalid email format", async () => {
+        const response = await request(app).post("/api/auth/login").send({
+            email: "invalid-email",
+            password: "password123",
+        });
+
+        expect(response.status).toBe(400);
+    });
+
+    it("should return 404 for non-existent user", async () => {
+        mockUserRepository.findOneBy.mockResolvedValue(null);
+
+        const response = await request(app).post("/api/auth/login").send({
+            email: "nonexistent@example.com",
+            password: "password123",
+        });
+
+        expect(response.status).toBe(404);
+    });
+
+    it("should return 400 for unverified account", async () => {
+        const mockUser = {
+            id: "user-uuid-123",
+            email: "test@example.com",
+            password: "hashed_password",
+            verified: false,
+        };
+
+        mockUserRepository.findOneBy.mockResolvedValue(mockUser);
+
+        const response = await request(app).post("/api/auth/login").send({
+            email: "test@example.com",
+            password: "password123",
+        });
+
+        expect(response.status).toBe(400);
+    });
+
+    it("should return 400 for invalid password", async () => {
+        const mockUser = {
+            id: "user-uuid-123",
+            email: "test@example.com",
+            password: "hashed_password",
+            verified: true,
+        };
+
+        mockUserRepository.findOneBy.mockResolvedValue(mockUser);
+        (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(false);
+
+        const response = await request(app).post("/api/auth/login").send({
+            email: "test@example.com",
+            password: "wrongpassword",
+        });
+
+        expect(response.status).toBe(400);
+    });
+});
+
+describe("POST /api/auth/logout", () => {
+    let app: express.Application;
+
+    const mockRefreshTokenRepository = {
+        findOne: jest.fn(),
+        delete: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.post("/api/auth/logout", AuthController.logout);
+        app.use(router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "RefreshToken") {
+                return mockRefreshTokenRepository;
+            }
+            return {};
+        });
+    });
+
+    it("should logout successfully", async () => {
+        const mockToken = {
+            id: "token-uuid-123",
+            token: "valid_refresh_token",
+            userId: "user-uuid-123",
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        };
+
+        mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
+        mockRefreshTokenRepository.delete.mockResolvedValue({ affected: 1 });
+
+        const response = await request(app).post("/api/auth/logout").send({
+            refreshToken: "valid_refresh_token",
+        });
+
+        expect(response.status).toBe(200);
+    });
+
+    it("should return 404 for invalid refresh token", async () => {
+        mockRefreshTokenRepository.findOne.mockResolvedValue(null);
+
+        const response = await request(app).post("/api/auth/logout").send({
+            refreshToken: "invalid_token",
+        });
+
+        expect(response.status).toBe(404);
+    });
+});
+
+describe("POST /api/auth/refresh-token", () => {
+    let app: express.Application;
+
+    const mockRefreshTokenRepository = {
+        findOne: jest.fn(),
+        delete: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.post("/api/auth/refresh-token", AuthController.refreshToken);
+        app.use(router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "RefreshToken") {
+                return mockRefreshTokenRepository;
+            }
+            return {};
+        });
+
+        (tokenUtil.verifyRefreshToken as jest.Mock).mockReturnValue({ id: "user-uuid-123" });
+        (tokenUtil.generateJWT as jest.Mock).mockReturnValue("new_access_token_jwt");
+    });
+
+    it("should refresh token successfully", async () => {
+        const mockUser = {
+            id: "user-uuid-123",
+            email: "test@example.com",
+            role: UserRole.BUYER,
+        };
+
+        const mockToken = {
+            id: "token-uuid-123",
+            token: "valid_refresh_token",
+            userId: mockUser.id,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            user: mockUser,
+        };
+
+        mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
+
+        const response = await request(app).post("/api/auth/refresh-token").send({
+            refreshToken: "valid_refresh_token",
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("accessToken");
+    });
+
+    it("should return 401 for invalid refresh token", async () => {
+        (tokenUtil.verifyRefreshToken as jest.Mock).mockImplementation(() => {
+            throw new Error("Invalid token");
+        });
+
+        const response = await request(app).post("/api/auth/refresh-token").send({
+            refreshToken: "invalid_token",
+        });
+
+        expect(response.status).toBe(401);
+    });
+
+    it("should return 401 for non-existent refresh token in database", async () => {
+        mockRefreshTokenRepository.findOne.mockResolvedValue(null);
+
+        const response = await request(app).post("/api/auth/refresh-token").send({
+            refreshToken: "valid_but_not_in_db",
+        });
+
+        expect(response.status).toBe(401);
+    });
+
+    it("should return 401 for expired refresh token", async () => {
+        const mockToken = {
+            id: "token-uuid-123",
+            token: "expired_token",
+            userId: "user-uuid-123",
+            expiresAt: new Date(Date.now() - 1000), // Expired
+        };
+
+        mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
+        mockRefreshTokenRepository.delete.mockResolvedValue({ affected: 1 });
+
+        const response = await request(app).post("/api/auth/refresh-token").send({
+            refreshToken: "expired_token",
+        });
+
+        expect(response.status).toBe(401);
     });
 });

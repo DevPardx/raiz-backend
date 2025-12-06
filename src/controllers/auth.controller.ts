@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
     ForgotPasswordDto,
+    LoginUserDto,
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
@@ -64,6 +65,36 @@ export class AuthController {
         try {
             const { token } = req.params;
             const result = await AuthService.validateResetToken(token as string, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static login = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userData: LoginUserDto = req.body;
+            const result = await AuthService.login(userData, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static logout = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { refreshToken } = req.body;
+            const result = await AuthService.logout(refreshToken, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { refreshToken } = req.body;
+            const result = await AuthService.refreshToken(refreshToken, req.t);
             res.status(200).json(result);
         } catch (error) {
             next(error);
