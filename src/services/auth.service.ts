@@ -3,19 +3,32 @@ import { TFunction } from "i18next";
 import { User } from "../entities/User.entity";
 import {
     ForgotPasswordDto,
+    LoginUserDto,
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
     VerifyAccountDto,
 } from "../dtos/user.dto";
-import { BadRequestError, ConflictError, NotFoundError } from "../handler/error.handler";
+import {
+    BadRequestError,
+    ConflictError,
+    NotFoundError,
+    UnauthorizedError,
+} from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
 import { UserRole, TokenType } from "../enums";
-import { expiresIn, hashPassword } from "../utils/bcrypt.util";
+import { comparePassword, hashPassword } from "../utils/bcrypt.util";
 import { VerificationToken } from "../entities/VerificationToken.entity";
-import { generateToken } from "../utils/token.util";
+import { RefreshToken } from "../entities/RefreshToken.entity";
+import {
+    generateJWT,
+    generateRefreshToken,
+    generateToken,
+    verifyRefreshToken,
+} from "../utils/token.util";
 import { transporter } from "../config/email.config";
 import { EmailTemplates } from "../emails/emailTemplates";
+import { refreshTokenExpiresIn, tokenExpiresIn } from "../utils";
 
 export class AuthService {
     private static getUserRepository(): Repository<User> {
@@ -24,6 +37,10 @@ export class AuthService {
 
     private static getVerificationTokenRepository(): Repository<VerificationToken> {
         return AppDataSource.getRepository(VerificationToken);
+    }
+
+    private static getRefreshTokenRepository(): Repository<RefreshToken> {
+        return AppDataSource.getRepository(RefreshToken);
     }
 
     static register = async (userData: RegisterUserDto, t: TFunction) => {
@@ -46,7 +63,7 @@ export class AuthService {
         const verificationToken = new VerificationToken();
         verificationToken.token = generateToken();
         verificationToken.type = TokenType.EMAIL_VERIFICATION;
-        verificationToken.expiresAt = expiresIn();
+        verificationToken.expiresAt = tokenExpiresIn();
         verificationToken.userId = user.id;
         await this.getVerificationTokenRepository().save(verificationToken);
 
@@ -108,7 +125,7 @@ export class AuthService {
         const verificationToken = new VerificationToken();
         verificationToken.token = generateToken();
         verificationToken.type = TokenType.EMAIL_VERIFICATION;
-        verificationToken.expiresAt = expiresIn();
+        verificationToken.expiresAt = tokenExpiresIn();
         verificationToken.userId = user.id;
         await this.getVerificationTokenRepository().save(verificationToken);
 
@@ -139,7 +156,7 @@ export class AuthService {
         const resetToken = new VerificationToken();
         resetToken.token = generateToken();
         resetToken.type = TokenType.PASSWORD_RESET;
-        resetToken.expiresAt = expiresIn(30); // 30 minutes for password reset
+        resetToken.expiresAt = tokenExpiresIn();
         resetToken.userId = user.id;
         await this.getVerificationTokenRepository().save(resetToken);
 
@@ -198,5 +215,83 @@ export class AuthService {
         }
 
         return t("valid_reset_token");
+    };
+
+    static login = async (userData: LoginUserDto, t: TFunction) => {
+        const { email, password } = userData;
+
+        const user = await this.getUserRepository().findOneBy({ email });
+
+        if (!user) {
+            throw new NotFoundError(t("user_not_found"));
+        }
+
+        if (!user.verified) {
+            throw new BadRequestError(t("account_not_verified"));
+        }
+
+        const checkPassword = await comparePassword(password, user.password);
+
+        if (!checkPassword) {
+            throw new BadRequestError(t("invalid_credentials"));
+        }
+
+        const accessToken = generateJWT({ id: user.id, role: user.role });
+        const refreshTokenValue = generateRefreshToken({ id: user.id });
+
+        const refreshToken = new RefreshToken();
+        refreshToken.token = refreshTokenValue;
+        refreshToken.userId = user.id;
+        refreshToken.expiresAt = refreshTokenExpiresIn();
+        await this.getRefreshTokenRepository().save(refreshToken);
+
+        return {
+            accessToken,
+            refreshToken: refreshTokenValue,
+        };
+    };
+
+    static logout = async (refreshToken: string, t: TFunction) => {
+        const token = await this.getRefreshTokenRepository().findOne({
+            where: { token: refreshToken },
+        });
+
+        if (!token) {
+            throw new NotFoundError(t("invalid_refresh_token"));
+        }
+
+        await this.getRefreshTokenRepository().delete({ id: token.id });
+
+        return t("logout_successful");
+    };
+
+    static refreshToken = async (refreshTokenValue: string, t: TFunction) => {
+        try {
+            verifyRefreshToken(refreshTokenValue);
+
+            const refreshToken = await this.getRefreshTokenRepository().findOne({
+                where: { token: refreshTokenValue },
+                relations: ["user"],
+            });
+
+            if (!refreshToken) {
+                throw new UnauthorizedError(t("invalid_refresh_token"));
+            }
+
+            if (refreshToken.expiresAt < new Date()) {
+                await this.getRefreshTokenRepository().delete({ id: refreshToken.id });
+                throw new UnauthorizedError(t("refresh_token_expired"));
+            }
+
+            const user = refreshToken.user;
+
+            const newAccessToken = generateJWT({ id: user.id, role: user.role });
+
+            return {
+                accessToken: newAccessToken,
+            };
+        } catch {
+            throw new UnauthorizedError(t("invalid_refresh_token"));
+        }
     };
 }

@@ -22,11 +22,19 @@ jest.mock("../../config/email.config", () => ({
 
 jest.mock("../../utils/bcrypt.util", () => ({
     hashPassword: jest.fn(),
-    expiresIn: jest.fn(),
+    comparePassword: jest.fn(),
 }));
 
 jest.mock("../../utils/token.util", () => ({
     generateToken: jest.fn(),
+    generateJWT: jest.fn(),
+    generateRefreshToken: jest.fn(),
+    verifyRefreshToken: jest.fn(),
+}));
+
+jest.mock("../../utils", () => ({
+    tokenExpiresIn: jest.fn(),
+    refreshTokenExpiresIn: jest.fn(),
 }));
 
 jest.mock("../../emails/emailTemplates", () => ({
@@ -53,6 +61,12 @@ describe("AuthService", () => {
         save: jest.fn(),
     };
 
+    const mockRefreshTokenRepository = {
+        save: jest.fn(),
+        findOne: jest.fn(),
+        delete: jest.fn(),
+    };
+
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -64,13 +78,23 @@ describe("AuthService", () => {
             if (entity.name === "VerificationToken") {
                 return mockVerificationTokenRepository;
             }
+            if (entity.name === "RefreshToken") {
+                return mockRefreshTokenRepository;
+            }
             return {};
         });
 
         // Setup utility mocks
-        (bcryptUtil.hashPassword as jest.Mock).mockResolvedValue("hashed_password");
-        (bcryptUtil.expiresIn as jest.Mock).mockReturnValue(new Date());
-        (tokenUtil.generateToken as jest.Mock).mockReturnValue("123456");
+        const { hashPassword, comparePassword } = bcryptUtil;
+        (hashPassword as jest.Mock).mockResolvedValue("hashed_password");
+        (comparePassword as jest.Mock).mockResolvedValue(true);
+
+        const { generateToken, generateJWT, generateRefreshToken, verifyRefreshToken } = tokenUtil;
+        (generateToken as jest.Mock).mockReturnValue("123456");
+        (generateJWT as jest.Mock).mockReturnValue("access_token_jwt");
+        (generateRefreshToken as jest.Mock).mockReturnValue("refresh_token_jwt");
+        (verifyRefreshToken as jest.Mock).mockReturnValue({ id: "user-id" });
+
         (transporter.sendMail as jest.Mock).mockResolvedValue({ messageId: "123" });
     });
 
@@ -674,6 +698,249 @@ describe("AuthService", () => {
 
             // Act & Assert
             await expect(AuthService.validateResetToken(validToken, mockT)).rejects.toThrow();
+        });
+    });
+
+    describe("login", () => {
+        const validEmail = "test@example.com";
+        const validPassword = "password123";
+        const loginData = { email: validEmail, password: validPassword };
+
+        it("should login successfully and return tokens with user data", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: validEmail,
+                password: "hashed_password",
+                name: "Test User",
+                role: UserRole.BUYER,
+                profilePicture: null,
+                verified: true,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOneBy: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                if (entity.name === "RefreshToken") {
+                    return {
+                        save: jest.fn().mockResolvedValue({}),
+                    };
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.login(loginData, mockT);
+
+            // Assert
+            expect(result).toEqual({
+                accessToken: "access_token_jwt",
+                refreshToken: "refresh_token_jwt",
+            });
+            expect(tokenUtil.generateJWT).toHaveBeenCalledWith({
+                id: mockUser.id,
+                role: mockUser.role,
+            });
+            expect(tokenUtil.generateRefreshToken).toHaveBeenCalledWith({ id: mockUser.id });
+        });
+
+        it("should throw NotFoundError for non-existent user", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOneBy: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.login(loginData, mockT)).rejects.toThrow();
+        });
+
+        it("should throw BadRequestError for unverified account", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: validEmail,
+                password: "hashed_password",
+                verified: false,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOneBy: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.login(loginData, mockT)).rejects.toThrow();
+        });
+
+        it("should throw BadRequestError for invalid password", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: validEmail,
+                password: "hashed_password",
+                verified: true,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOneBy: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(false);
+
+            // Act & Assert
+            await expect(AuthService.login(loginData, mockT)).rejects.toThrow();
+        });
+    });
+
+    describe("logout", () => {
+        const validRefreshToken = "valid_refresh_token";
+
+        it("should logout successfully", async () => {
+            // Arrange
+            const mockToken = {
+                id: "token-uuid-123",
+                token: validRefreshToken,
+                userId: "user-uuid-123",
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "RefreshToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockToken),
+                        delete: jest.fn().mockResolvedValue({ affected: 1 }),
+                    };
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.logout(validRefreshToken, mockT);
+
+            // Assert
+            expect(result).toBe("logout_successful");
+        });
+
+        it("should throw NotFoundError for invalid refresh token", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "RefreshToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.logout("invalid_token", mockT)).rejects.toThrow();
+        });
+    });
+
+    describe("refreshToken", () => {
+        const validRefreshToken = "valid_refresh_token";
+
+        it("should refresh token successfully", async () => {
+            // Arrange
+            const mockUser = {
+                id: "user-uuid-123",
+                email: "test@example.com",
+                role: UserRole.BUYER,
+            };
+
+            const mockToken = {
+                id: "token-uuid-123",
+                token: validRefreshToken,
+                userId: mockUser.id,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                user: mockUser,
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "RefreshToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockToken),
+                    };
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.refreshToken(validRefreshToken, mockT);
+
+            // Assert
+            expect(result).toEqual({
+                accessToken: "access_token_jwt",
+            });
+            expect(tokenUtil.generateJWT).toHaveBeenCalledWith({
+                id: mockUser.id,
+                role: mockUser.role,
+            });
+        });
+
+        it("should throw UnauthorizedError for invalid refresh token", async () => {
+            // Arrange
+            (tokenUtil.verifyRefreshToken as jest.Mock).mockImplementation(() => {
+                throw new Error("Invalid token");
+            });
+
+            // Act & Assert
+            await expect(AuthService.refreshToken("invalid_token", mockT)).rejects.toThrow();
+        });
+
+        it("should throw UnauthorizedError for non-existent refresh token in database", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "RefreshToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.refreshToken(validRefreshToken, mockT)).rejects.toThrow();
+        });
+
+        it("should throw UnauthorizedError for expired refresh token", async () => {
+            // Arrange
+            const mockToken = {
+                id: "token-uuid-123",
+                token: validRefreshToken,
+                userId: "user-uuid-123",
+                expiresAt: new Date(Date.now() - 1000), // Expired
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "RefreshToken") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockToken),
+                        delete: jest.fn().mockResolvedValue({ affected: 1 }),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.refreshToken(validRefreshToken, mockT)).rejects.toThrow();
         });
     });
 });
