@@ -8,11 +8,13 @@ import {
     Index,
 } from "typeorm";
 import { User } from "./User.entity";
+import { TokenType } from "../enums";
 
 @Entity("verification_tokens")
 @Index("idx_verification_tokens_user_id", ["userId"])
 @Index("idx_verification_tokens_token", ["token"])
 @Index("idx_verification_tokens_expires_at", ["expiresAt"])
+@Index("idx_verification_tokens_type", ["type"])
 export class VerificationToken {
     @PrimaryGeneratedColumn("uuid")
     id: string;
@@ -22,6 +24,13 @@ export class VerificationToken {
 
     @Column({ type: "varchar", length: 6 })
     token: string;
+
+    @Column({
+        type: "enum",
+        enum: TokenType,
+        default: TokenType.EMAIL_VERIFICATION,
+    })
+    type: TokenType;
 
     @Column({ type: "timestamptz", name: "expires_at" })
     expiresAt: Date;

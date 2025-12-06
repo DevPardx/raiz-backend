@@ -10,7 +10,7 @@ export class RegisterUserDto {
     name: string;
 
     @IsString({ message: "validation:password_must_be_string" })
-    @MinLength(6, { message: "validation:password_min_length" })
+    @MinLength(8, { message: "validation:password_min_length" })
     password: string;
 
     @IsEnum(UserRole, { message: "validation:role_invalid" })
@@ -25,6 +25,17 @@ export class VerifyAccountDto {
 export class ResendVerificationCodeDto {
     @IsEmail({}, { message: "validation:email_invalid" })
     email: string;
+}
+
+export class ForgotPasswordDto {
+    @IsEmail({}, { message: "validation:email_invalid" })
+    email: string;
+}
+
+export class ResetPasswordDto {
+    @IsString({ message: "validation:password_must_be_string" })
+    @MinLength(8, { message: "validation:password_min_length" })
+    newPassword: string;
 }
 
 export class LoginUserDto {

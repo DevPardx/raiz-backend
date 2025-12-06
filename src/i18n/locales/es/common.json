@@ -8,5 +8,8 @@
     "verification_email_sent": "Hemos enviado un correo electrónico para verificar tu cuenta.",
     "invalid_verification_code": "El código de verificación no es válido o ha expirado.",
     "account_verified_successfully": "Tu cuenta ha sido verificada exitosamente.",
-    "account_already_verified": "La cuenta ya ha sido verificada."
+    "account_already_verified": "La cuenta ya ha sido verificada.",
+    "reset_password_email_sent": "Hemos enviado un correo electrónico para reestablecer tu contraseña.",
+    "password_reset_successfully": "Tu contraseña ha sido reestablecida exitosamente.",
+    "valid_reset_token": "El token de reestablecimiento es válido."
 }

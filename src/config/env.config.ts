@@ -2,6 +2,8 @@ import "dotenv/config";
 import logger from "../utils/logger.util";
 
 interface EnvConfig {
+    FRONTEND_URL: string;
+
     POSTGRES_DB: string;
     POSTGRES_USER: string;
     POSTGRES_PASSWORD: string;
@@ -21,6 +23,8 @@ interface EnvConfig {
 }
 
 const requiredEnvVars: (keyof EnvConfig)[] = [
+    "FRONTEND_URL",
+
     "POSTGRES_DB",
     "POSTGRES_USER",
     "POSTGRES_PASSWORD",
@@ -87,6 +91,8 @@ export function validateEnv(): void {
 }
 
 export const env: EnvConfig = {
+    FRONTEND_URL: process.env.FRONTEND_URL!,
+
     POSTGRES_DB: process.env.POSTGRES_DB!,
     POSTGRES_USER: process.env.POSTGRES_USER!,
     POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD!,

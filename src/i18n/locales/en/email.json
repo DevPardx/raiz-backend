@@ -5,5 +5,12 @@
     "verify_account_body": "Thanks for starting the new Raiz account creation process. We want to make sure it's really you. Please enter the following verification code when prompted. If you don't want to create an account, you can ignore this message.",
     "verify_account_verification_code_label": "Verification code",
     "verify_account_code_validity": "(This code is valid for 15 minutes)",
-    "verify_account_security_note": "Raiz will never email you and ask you to disclose or verify your password."
+    "verify_account_security_note": "Raiz will never email you and ask you to disclose or verify your password.",
+
+    "forgot_password_subject": "Reset your Raiz password",
+    "forgot_password_preview": "Raiz Password Reset",
+    "forgot_password_title": "Reset your password",
+    "forgot_password_body": "We received a request to reset the password for your Raiz account. Please visit the link below to set a new password. If you did not request a password reset, please ignore this email.",
+    "forgot_password_verification_code_label": "Verification link",
+    "forgot_password_code_validity": "(This link is valid for 15 minutes)"
 }

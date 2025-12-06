@@ -8,5 +8,8 @@
     "verification_email_sent": "We've sent an email to verify your account.",
     "invalid_verification_code": "The verification code is invalid or has expired.",
     "account_verified_successfully": "Your account has been verified successfully.",
-    "account_already_verified": "The account has already been verified."
+    "account_already_verified": "The account has already been verified.",
+    "reset_password_email_sent": "We've sent an email to reset your password.",
+    "password_reset_successfully": "Your password has been reset successfully.",
+    "valid_reset_token": "The reset token is valid."
 }
