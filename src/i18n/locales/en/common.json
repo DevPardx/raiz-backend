@@ -17,5 +17,11 @@
     "invalid_refresh_token": "Invalid refresh token.",
     "refresh_token_expired": "The refresh token has expired.",
     "logout_successful": "Logged out successfully.",
-    "invalid_reset_token": "The reset token is invalid or has expired."
+    "invalid_reset_token": "The reset token is invalid or has expired.",
+    "unauthorized": "Unauthorized. Invalid or expired token.",
+    "forbidden": "You don't have permission to access this resource.",
+    "password_changed_successfully": "Your password has been updated successfully.",
+    "current_password_incorrect": "Your current password does not match.",
+    "password_incorrect": "Your password does not match.",
+    "password_correct": "Password verified successfully."
 }

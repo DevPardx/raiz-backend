@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
+    ChangePasswordDto,
+    ConfirmPasswordDto,
     ForgotPasswordDto,
     LoginUserDto,
     RegisterUserDto,
@@ -95,6 +97,28 @@ export class AuthController {
         try {
             const { refreshToken } = req.body;
             const result = await AuthService.refreshToken(refreshToken, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static changePassword = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const changePasswordData: ChangePasswordDto = req.body;
+            const userId = req.user!.id;
+            const result = await AuthService.changePassword(userId, changePasswordData, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static confirmPassword = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const confirmPasswordData: ConfirmPasswordDto = req.body;
+            const userId = req.user!.id;
+            const result = await AuthService.confirmPassword(userId, confirmPasswordData, req.t);
             res.status(200).json(result);
         } catch (error) {
             next(error);

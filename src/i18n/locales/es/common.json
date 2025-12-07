@@ -17,5 +17,11 @@
     "invalid_refresh_token": "Token de actualización inválido.",
     "refresh_token_expired": "El token de actualización ha expirado.",
     "logout_successful": "Sesión cerrada exitosamente.",
-    "invalid_reset_token": "El token de reestablecimiento no es válido o ha expirado."
+    "invalid_reset_token": "The reset token is invalid or has expired.",
+    "unauthorized": "No autorizado. Token inválido o expirado.",
+    "forbidden": "No tienes permisos para acceder a este recurso.",
+    "password_changed_successfully": "Tu contraseña ha sido actualizada exitosamente.",
+    "current_password_incorrect": "Tu contraseña actual no coincide.",
+    "password_incorrect": "Tu contraseña no coincide.",
+    "password_correct": "Contraseña verificada exitosamente."
 }

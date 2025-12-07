@@ -48,6 +48,22 @@ export class LoginUserDto {
     password: string;
 }
 
+export class ChangePasswordDto {
+    @IsString({ message: "validation:current_password_required" })
+    @IsNotEmpty({ message: "validation:current_password_required" })
+    currentPassword: string;
+
+    @IsString({ message: "validation:password_must_be_string" })
+    @MinLength(8, { message: "validation:password_min_length" })
+    newPassword: string;
+}
+
+export class ConfirmPasswordDto {
+    @IsString({ message: "validation:current_password_required" })
+    @IsNotEmpty({ message: "validation:current_password_required" })
+    password: string;
+}
+
 export class UpdateUserDto {
     @IsOptional()
     @IsString({ message: "validation:name_must_be_string" })

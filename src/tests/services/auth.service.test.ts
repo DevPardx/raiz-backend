@@ -2,7 +2,7 @@ import { TFunction } from "i18next";
 import { AuthService } from "../../services/auth.service";
 import { AppDataSource } from "../../config/typeorm.config";
 import { transporter } from "../../config/email.config";
-import { ConflictError } from "../../handler/error.handler";
+import { ConflictError, NotFoundError, BadRequestError } from "../../handler/error.handler";
 import { UserRole } from "../../enums";
 import * as bcryptUtil from "../../utils/bcrypt.util";
 import * as tokenUtil from "../../utils/token.util";
@@ -941,6 +941,220 @@ describe("AuthService", () => {
 
             // Act & Assert
             await expect(AuthService.refreshToken(validRefreshToken, mockT)).rejects.toThrow();
+        });
+    });
+
+    describe("changePassword", () => {
+        const userId = "user-uuid-123";
+        const currentPassword = "oldPassword123";
+        const newPassword = "newPassword456";
+        const changePasswordData = { currentPassword, newPassword };
+
+        it("should change password successfully", async () => {
+            // Arrange
+            const mockUser = {
+                id: userId,
+                password: "hashed_old_password",
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockUser),
+                        save: jest.fn().mockResolvedValue({
+                            ...mockUser,
+                            password: "hashed_new_password",
+                        }),
+                    };
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(true);
+            (bcryptUtil.hashPassword as jest.Mock).mockResolvedValue("hashed_new_password");
+
+            // Act
+            const result = await AuthService.changePassword(userId, changePasswordData, mockT);
+
+            // Assert
+            expect(result).toBe("password_changed_successfully");
+            expect(bcryptUtil.comparePassword).toHaveBeenCalledWith(
+                currentPassword,
+                "hashed_old_password",
+            );
+            expect(bcryptUtil.hashPassword).toHaveBeenCalledWith(newPassword);
+        });
+
+        it("should throw NotFoundError if user doesn't exist", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(
+                AuthService.changePassword(userId, changePasswordData, mockT),
+            ).rejects.toThrow(NotFoundError);
+        });
+
+        it("should throw BadRequestError if current password is incorrect", async () => {
+            // Arrange
+            const mockUser = {
+                id: userId,
+                password: "hashed_old_password",
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(false);
+
+            // Act & Assert
+            await expect(
+                AuthService.changePassword(userId, changePasswordData, mockT),
+            ).rejects.toThrow(BadRequestError);
+            expect(bcryptUtil.hashPassword).not.toHaveBeenCalled();
+        });
+
+        it("should query user with password field selected", async () => {
+            // Arrange
+            const mockUserRepository = {
+                findOne: jest.fn().mockResolvedValue({
+                    id: userId,
+                    password: "hashed_old_password",
+                }),
+                save: jest.fn(),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(true);
+
+            // Act
+            await AuthService.changePassword(userId, changePasswordData, mockT);
+
+            // Assert
+            expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userId },
+                select: ["id", "password"],
+            });
+        });
+    });
+
+    describe("confirmPassword", () => {
+        const userId = "user-uuid-123";
+        const password = "testPassword123";
+        const confirmPasswordData = { password };
+
+        it("should confirm password successfully", async () => {
+            // Arrange
+            const mockUser = {
+                id: userId,
+                password: "hashed_password",
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(true);
+
+            // Act
+            const result = await AuthService.confirmPassword(userId, confirmPasswordData, mockT);
+
+            // Assert
+            expect(result).toBe("password_correct");
+            expect(bcryptUtil.comparePassword).toHaveBeenCalledWith(password, mockUser.password);
+        });
+
+        it("should throw NotFoundError if user doesn't exist", async () => {
+            // Arrange
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(null),
+                    };
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(
+                AuthService.confirmPassword(userId, confirmPasswordData, mockT),
+            ).rejects.toThrow(NotFoundError);
+        });
+
+        it("should throw BadRequestError if password is incorrect", async () => {
+            // Arrange
+            const mockUser = {
+                id: userId,
+                password: "hashed_password",
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return {
+                        findOne: jest.fn().mockResolvedValue(mockUser),
+                    };
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(false);
+
+            // Act & Assert
+            await expect(
+                AuthService.confirmPassword(userId, confirmPasswordData, mockT),
+            ).rejects.toThrow(BadRequestError);
+        });
+
+        it("should query user with password field selected", async () => {
+            // Arrange
+            const mockUserRepository = {
+                findOne: jest.fn().mockResolvedValue({
+                    id: userId,
+                    password: "hashed_password",
+                }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            (bcryptUtil.comparePassword as jest.Mock).mockResolvedValue(true);
+
+            // Act
+            await AuthService.confirmPassword(userId, confirmPasswordData, mockT);
+
+            // Assert
+            expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userId },
+                select: ["id", "password"],
+            });
         });
     });
 });

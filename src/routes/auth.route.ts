@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { validateDto } from "../middleware/validation.middleware";
+import { authenticate } from "../middleware/auth.middleware";
 import {
+    ChangePasswordDto,
+    ConfirmPasswordDto,
     ForgotPasswordDto,
     LoginUserDto,
     RegisterUserDto,
@@ -34,9 +37,21 @@ router.post("/logout", AuthController.logout);
 
 router.post("/refresh-token", AuthController.refreshToken);
 
-// router.post("/change-password");
+router.post(
+    "/change-password",
+    authenticate,
+    validateDto(ChangePasswordDto),
+    AuthController.changePassword,
+);
+
+router.post(
+    "/confirm-password",
+    authenticate,
+    validateDto(ConfirmPasswordDto),
+    AuthController.confirmPassword,
+);
+
 // router.put("/update-profile");
-// router.post("/confirm-password");
 // router.get("/me");
 
 export default router;
