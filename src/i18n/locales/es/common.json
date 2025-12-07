@@ -23,5 +23,7 @@
     "password_changed_successfully": "Tu contraseña ha sido actualizada exitosamente.",
     "current_password_incorrect": "Tu contraseña actual no coincide.",
     "password_incorrect": "Tu contraseña no coincide.",
-    "password_correct": "Contraseña verificada exitosamente."
+    "password_correct": "Contraseña verificada exitosamente.",
+    "no_fields_to_update": "No hay campos que actualizar.",
+    "user_updated_successfully": "Usuario actualizado exitosamente."
 }

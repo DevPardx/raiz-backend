@@ -9,6 +9,7 @@ import {
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
+    UpdateUserDto,
     VerifyAccountDto,
 } from "../dtos/user.dto";
 import { AuthController } from "../controllers/auth.controller";
@@ -51,7 +52,8 @@ router.post(
     AuthController.confirmPassword,
 );
 
-// router.put("/update-profile");
-// router.get("/me");
+router.put("/update-user", authenticate, validateDto(UpdateUserDto), AuthController.updateUser);
+
+router.get("/get-user", authenticate, AuthController.getUser);
 
 export default router;

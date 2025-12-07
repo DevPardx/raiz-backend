@@ -9,6 +9,7 @@ import {
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
+    UpdateUserDto,
     VerifyAccountDto,
 } from "../dtos/user.dto";
 import {
@@ -340,5 +341,47 @@ export class AuthService {
         }
 
         return t("password_correct");
+    };
+
+    static updateUser = async (userId: string, userData: UpdateUserDto, t: TFunction) => {
+        const updateData: Partial<User> = {};
+
+        if (userData.name !== undefined) {
+            updateData.name = userData.name;
+        }
+
+        if (userData.profilePicture !== undefined) {
+            updateData.profilePicture = userData.profilePicture;
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            throw new BadRequestError(t("no_fields_to_update"));
+        }
+
+        const result = await this.getUserRepository().update({ id: userId }, updateData);
+
+        if (result.affected === 0) {
+            throw new NotFoundError(t("user_not_found"));
+        }
+
+        return t("user_updated_successfully");
+    };
+
+    static getUser = async (userId: string) => {
+        const user = await this.getUserRepository().findOne({
+            where: { id: userId },
+            select: [
+                "id",
+                "email",
+                "name",
+                "role",
+                "verified",
+                "profilePicture",
+                "createdAt",
+                "updatedAt",
+            ],
+        });
+
+        return user;
     };
 }

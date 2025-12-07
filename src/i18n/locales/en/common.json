@@ -23,5 +23,7 @@
     "password_changed_successfully": "Your password has been updated successfully.",
     "current_password_incorrect": "Your current password does not match.",
     "password_incorrect": "Your password does not match.",
-    "password_correct": "Password verified successfully."
+    "password_correct": "Password verified successfully.",
+    "no_fields_to_update": "No fields to update.",
+    "user_updated_successfully": "User updated successfully."
 }
