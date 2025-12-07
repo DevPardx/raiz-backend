@@ -2,6 +2,8 @@ import { Repository } from "typeorm";
 import { TFunction } from "i18next";
 import { User } from "../entities/User.entity";
 import {
+    ChangePasswordDto,
+    ConfirmPasswordDto,
     ForgotPasswordDto,
     LoginUserDto,
     RegisterUserDto,
@@ -293,5 +295,50 @@ export class AuthService {
         } catch {
             throw new UnauthorizedError(t("invalid_refresh_token"));
         }
+    };
+
+    static changePassword = async (userId: string, userData: ChangePasswordDto, t: TFunction) => {
+        const { currentPassword, newPassword } = userData;
+
+        const user = await this.getUserRepository().findOne({
+            where: { id: userId },
+            select: ["id", "password"],
+        });
+
+        if (!user) {
+            throw new NotFoundError(t("user_not_found"));
+        }
+
+        const isPasswordValid = await comparePassword(currentPassword, user.password);
+
+        if (!isPasswordValid) {
+            throw new BadRequestError(t("current_password_incorrect"));
+        }
+
+        user.password = await hashPassword(newPassword);
+        await this.getUserRepository().save(user);
+
+        return t("password_changed_successfully");
+    };
+
+    static confirmPassword = async (userId: string, userData: ConfirmPasswordDto, t: TFunction) => {
+        const { password } = userData;
+
+        const user = await this.getUserRepository().findOne({
+            where: { id: userId },
+            select: ["id", "password"],
+        });
+
+        if (!user) {
+            throw new NotFoundError(t("user_not_found"));
+        }
+
+        const isPasswordValid = await comparePassword(password, user.password);
+
+        if (!isPasswordValid) {
+            throw new BadRequestError(t("current_password_incorrect"));
+        }
+
+        return t("password_correct");
     };
 }
