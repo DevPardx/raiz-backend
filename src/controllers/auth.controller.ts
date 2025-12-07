@@ -7,6 +7,7 @@ import {
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
+    UpdateUserDto,
     VerifyAccountDto,
 } from "../dtos/user.dto";
 import { AuthService } from "../services/auth.service";
@@ -119,6 +120,27 @@ export class AuthController {
             const confirmPasswordData: ConfirmPasswordDto = req.body;
             const userId = req.user!.id;
             const result = await AuthService.confirmPassword(userId, confirmPasswordData, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static updateUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const updateUserData: UpdateUserDto = req.body;
+            const userId = req.user!.id;
+            const result = await AuthService.updateUser(userId, updateUserData, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static getUser = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.user!.id;
+            const result = await AuthService.getUser(userId);
             res.status(200).json(result);
         } catch (error) {
             next(error);

@@ -1157,4 +1157,289 @@ describe("AuthService", () => {
             });
         });
     });
+
+    describe("updateUser", () => {
+        const userId = "user-uuid-123";
+
+        it("should update user name successfully", async () => {
+            // Arrange
+            const updateData = { name: "New Name" };
+
+            const mockUserRepository = {
+                update: jest.fn().mockResolvedValue({ affected: 1 }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.updateUser(userId, updateData, mockT);
+
+            // Assert
+            expect(result).toBe("user_updated_successfully");
+            expect(mockUserRepository.update).toHaveBeenCalledWith(
+                { id: userId },
+                { name: "New Name" },
+            );
+        });
+
+        it("should update user profilePicture successfully", async () => {
+            // Arrange
+            const updateData = { profilePicture: "https://example.com/photo.jpg" };
+
+            const mockUserRepository = {
+                update: jest.fn().mockResolvedValue({ affected: 1 }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.updateUser(userId, updateData, mockT);
+
+            // Assert
+            expect(result).toBe("user_updated_successfully");
+            expect(mockUserRepository.update).toHaveBeenCalledWith(
+                { id: userId },
+                { profilePicture: "https://example.com/photo.jpg" },
+            );
+        });
+
+        it("should update both name and profilePicture successfully", async () => {
+            // Arrange
+            const updateData = {
+                name: "New Name",
+                profilePicture: "https://example.com/photo.jpg",
+            };
+
+            const mockUserRepository = {
+                update: jest.fn().mockResolvedValue({ affected: 1 }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.updateUser(userId, updateData, mockT);
+
+            // Assert
+            expect(result).toBe("user_updated_successfully");
+            expect(mockUserRepository.update).toHaveBeenCalledWith(
+                { id: userId },
+                {
+                    name: "New Name",
+                    profilePicture: "https://example.com/photo.jpg",
+                },
+            );
+        });
+
+        it("should throw BadRequestError when no fields to update", async () => {
+            // Arrange
+            const updateData = {};
+
+            // Act & Assert
+            await expect(AuthService.updateUser(userId, updateData, mockT)).rejects.toThrow(
+                BadRequestError,
+            );
+        });
+
+        it("should throw NotFoundError when user doesn't exist", async () => {
+            // Arrange
+            const updateData = { name: "New Name" };
+
+            const mockUserRepository = {
+                update: jest.fn().mockResolvedValue({ affected: 0 }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act & Assert
+            await expect(AuthService.updateUser(userId, updateData, mockT)).rejects.toThrow(
+                NotFoundError,
+            );
+        });
+
+        it("should only update provided fields", async () => {
+            // Arrange
+            const updateData = { name: "New Name" };
+
+            const mockUserRepository = {
+                update: jest.fn().mockResolvedValue({ affected: 1 }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            await AuthService.updateUser(userId, updateData, mockT);
+
+            // Assert
+            expect(mockUserRepository.update).toHaveBeenCalledWith(
+                { id: userId },
+                expect.not.objectContaining({ profilePicture: expect.anything() }),
+            );
+            expect(mockUserRepository.update).toHaveBeenCalledWith(
+                { id: userId },
+                { name: "New Name" },
+            );
+        });
+    });
+
+    describe("getUser", () => {
+        const userId = "user-uuid-123";
+
+        it("should get user successfully", async () => {
+            // Arrange
+            const mockUser = {
+                id: userId,
+                email: "test@example.com",
+                name: "Test User",
+                role: UserRole.BUYER,
+                verified: true,
+                profilePicture: "https://example.com/photo.jpg",
+                createdAt: new Date("2024-01-01"),
+                updatedAt: new Date("2024-01-02"),
+            };
+
+            const mockUserRepository = {
+                findOne: jest.fn().mockResolvedValue(mockUser),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.getUser(userId);
+
+            // Assert
+            expect(result).toEqual(mockUser);
+            expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userId },
+                select: [
+                    "id",
+                    "email",
+                    "name",
+                    "role",
+                    "verified",
+                    "profilePicture",
+                    "createdAt",
+                    "updatedAt",
+                ],
+            });
+        });
+
+        it("should return null when user doesn't exist", async () => {
+            // Arrange
+            const mockUserRepository = {
+                findOne: jest.fn().mockResolvedValue(null),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.getUser(userId);
+
+            // Assert
+            expect(result).toBeNull();
+        });
+
+        it("should select only specific fields excluding password", async () => {
+            // Arrange
+            const mockUserRepository = {
+                findOne: jest.fn().mockResolvedValue({
+                    id: userId,
+                    email: "test@example.com",
+                }),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            await AuthService.getUser(userId);
+
+            // Assert
+            expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userId },
+                select: expect.not.arrayContaining(["password"]),
+            });
+            expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+                where: { id: userId },
+                select: expect.arrayContaining(["id", "email", "name", "role"]),
+            });
+        });
+
+        it("should return user with all expected fields", async () => {
+            // Arrange
+            const mockUser = {
+                id: userId,
+                email: "test@example.com",
+                name: "Test User",
+                role: UserRole.SELLER,
+                verified: false,
+                profilePicture: null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+
+            const mockUserRepository = {
+                findOne: jest.fn().mockResolvedValue(mockUser),
+            };
+
+            (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+                if (entity.name === "User") {
+                    return mockUserRepository;
+                }
+                return {};
+            });
+
+            // Act
+            const result = await AuthService.getUser(userId);
+
+            // Assert
+            expect(result).toHaveProperty("id");
+            expect(result).toHaveProperty("email");
+            expect(result).toHaveProperty("name");
+            expect(result).toHaveProperty("role");
+            expect(result).toHaveProperty("verified");
+            expect(result).toHaveProperty("profilePicture");
+            expect(result).toHaveProperty("createdAt");
+            expect(result).toHaveProperty("updatedAt");
+            expect(result).not.toHaveProperty("password");
+        });
+    });
 });
