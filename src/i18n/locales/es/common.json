@@ -25,5 +25,6 @@
     "password_incorrect": "Tu contraseña no coincide.",
     "password_correct": "Contraseña verificada exitosamente.",
     "no_fields_to_update": "No hay campos que actualizar.",
-    "user_updated_successfully": "Usuario actualizado exitosamente."
+    "user_updated_successfully": "Usuario actualizado exitosamente.",
+    "property_not_found": "Propiedad no encontrada."
 }
