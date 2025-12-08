@@ -52,3 +52,33 @@ export const validateDto = (dtoClass: any) => {
         }
     };
 };
+
+export const validateQuery = (dtoClass: any) => {
+    return async (req: Request, _res: Response, next: NextFunction) => {
+        try {
+            const dtoInstance = plainToInstance(dtoClass, req.query);
+
+            const errors: ValidationError[] = await validate(dtoInstance as object);
+
+            if (errors.length > 0) {
+                const formattedErrors = errors.map((error) => ({
+                    field: error.property,
+                    message: translateValidationMessage(error, req),
+                }));
+
+                throw new BadRequestError(req.t("validation_failed"), formattedErrors);
+            }
+
+            // Use Object.defineProperty to avoid readonly property error in Express 5
+            Object.defineProperty(req, "query", {
+                value: dtoInstance,
+                writable: true,
+                configurable: true,
+            });
+
+            next();
+        } catch (error) {
+            next(error);
+        }
+    };
+};

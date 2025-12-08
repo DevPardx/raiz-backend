@@ -25,5 +25,6 @@
     "password_incorrect": "Your password does not match.",
     "password_correct": "Password verified successfully.",
     "no_fields_to_update": "No fields to update.",
-    "user_updated_successfully": "User updated successfully."
+    "user_updated_successfully": "User updated successfully.",
+    "property_not_found": "Property not found."
 }
