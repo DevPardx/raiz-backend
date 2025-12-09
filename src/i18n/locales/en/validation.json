@@ -31,5 +31,17 @@
     "limit_min_value": "Limit must be at least 1",
     "limit_max_value": "Limit must not exceed 100",
     "sort_by_invalid": "Sort by must be one of: price, createdAt, updatedAt, areaSqm, bedrooms, bathrooms",
-    "sort_order_invalid": "Sort order must be ASC or DESC"
+    "sort_order_invalid": "Sort order must be ASC or DESC",
+    "ne_lat_must_be_number": "Northeast latitude must be a number",
+    "ne_lat_invalid": "Northeast latitude must be a valid latitude",
+    "ne_lng_must_be_number": "Northeast longitude must be a number",
+    "ne_lng_invalid": "Northeast longitude must be a valid longitude",
+    "sw_lat_must_be_number": "Southwest latitude must be a number",
+    "sw_lat_invalid": "Southwest latitude must be a valid latitude",
+    "sw_lng_must_be_number": "Southwest longitude must be a number",
+    "sw_lng_invalid": "Southwest longitude must be a valid longitude",
+    "map_limit_max_value": "Map limit must not exceed 500",
+    "search_query_required": "Search query is required",
+    "search_query_must_be_string": "Search query must be a string",
+    "search_query_min_length": "Search query must be at least 2 characters long"
 }

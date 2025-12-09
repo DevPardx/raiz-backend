@@ -1,17 +1,29 @@
 import { Router } from "express";
 import { validateQuery } from "../middleware/validation.middleware";
-import { GetPropertiesQueryDto } from "../dtos/property.dto";
+import {
+    GetPropertiesQueryDto,
+    MapBoundsQueryDto,
+    SearchPropertiesQueryDto,
+} from "../dtos/property.dto";
 import { PropertiesController } from "../controllers/properties.controller";
 // import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
 router.get("/", validateQuery(GetPropertiesQueryDto), PropertiesController.getAllProperties);
+router.get(
+    "/map/bounds",
+    validateQuery(MapBoundsQueryDto),
+    PropertiesController.getPropertiesInBounds,
+);
+router.get(
+    "/search",
+    validateQuery(SearchPropertiesQueryDto),
+    PropertiesController.searchProperties,
+);
 router.get("/:id", PropertiesController.getPropertyById);
 
 // Future routes to implement:
-// router.get("/map/bounds", PropertiesController.getPropertiesInBounds);
-// router.get("/search", PropertiesController.searchProperties);
 // router.get("/featured/list", PropertiesController.getFeaturedProperties);
 // router.get("/user/my-properties", authenticate, PropertiesController.getMyProperties);
 // router.post("/", authenticate, validateDto(CreatePropertyDto), PropertiesController.createProperty);
