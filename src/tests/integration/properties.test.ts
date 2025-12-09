@@ -23,7 +23,11 @@ jest.mock("../../utils/logger.util", () => ({
 // Import after mocks are set up
 import { errorHandler } from "../../middleware/error.middleware";
 import { languageMiddleware } from "../../middleware/language.middleware";
-import { GetPropertiesQueryDto } from "../../dtos/property.dto";
+import {
+    GetPropertiesQueryDto,
+    MapBoundsQueryDto,
+    SearchPropertiesQueryDto,
+} from "../../dtos/property.dto";
 import { PropertiesController } from "../../controllers/properties.controller";
 import { Router } from "express";
 import { plainToInstance } from "class-transformer";
@@ -689,6 +693,357 @@ describe("GET /api/properties/:id", () => {
 
             expect(response.status).toBe(404);
             expect(response.body).toHaveProperty("error");
+        });
+    });
+});
+
+describe("GET /api/properties/map/bounds", () => {
+    let app: express.Application;
+
+    const mockPropertyRepository = {
+        find: jest.fn(),
+    };
+
+    const mockPropertiesInBounds = [
+        {
+            id: "property-uuid-1",
+            title: "House in City",
+            price: 250000,
+            currency: "USD",
+            propertyType: PropertyType.HOUSE,
+            address: "123 Main St",
+            latitude: 10.5,
+            longitude: -74.5,
+            bedrooms: 3,
+            bathrooms: 2,
+            areaSqm: 150,
+            status: PropertyStatus.ACTIVE,
+            images: [
+                {
+                    id: "img-1",
+                    url: "https://example.com/img1.jpg",
+                    displayOrder: 0,
+                },
+                {
+                    id: "img-2",
+                    url: "https://example.com/img2.jpg",
+                    displayOrder: 1,
+                },
+            ],
+            user: {
+                id: "user-1",
+                name: "John Doe",
+            },
+        },
+    ];
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.get(
+            "/map/bounds",
+            validateQuery(MapBoundsQueryDto),
+            PropertiesController.getPropertiesInBounds,
+        );
+        app.use("/api/properties", router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "Property") {
+                return mockPropertyRepository;
+            }
+            return {};
+        });
+    });
+
+    describe("successful requests", () => {
+        it("should return properties within map bounds", async () => {
+            mockPropertyRepository.find.mockResolvedValue(mockPropertiesInBounds);
+
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=11&neLng=-74&swLat=10&swLng=-75",
+            );
+
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
+            expect(response.body).toHaveLength(1);
+            expect(response.body[0]).toHaveProperty("id");
+            expect(response.body[0]).toHaveProperty("latitude");
+            expect(response.body[0]).toHaveProperty("longitude");
+            expect(response.body[0].images).toHaveLength(1); // Only first image
+        });
+
+        it("should filter by property type in bounds", async () => {
+            mockPropertyRepository.find.mockResolvedValue(mockPropertiesInBounds);
+
+            const response = await request(app).get(
+                `/api/properties/map/bounds?neLat=11&neLng=-74&swLat=10&swLng=-75&propertyType=${PropertyType.HOUSE}`,
+            );
+
+            expect(response.status).toBe(200);
+            expect(mockPropertyRepository.find).toHaveBeenCalled();
+        });
+
+        it("should respect limit parameter", async () => {
+            mockPropertyRepository.find.mockResolvedValue(mockPropertiesInBounds);
+
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=11&neLng=-74&swLat=10&swLng=-75&limit=50",
+            );
+
+            expect(response.status).toBe(200);
+        });
+    });
+
+    describe("validation errors", () => {
+        it("should return 400 for missing neLat", async () => {
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLng=-74&swLat=10&swLng=-75",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for missing neLng", async () => {
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=11&swLat=10&swLng=-75",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for missing swLat", async () => {
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=11&neLng=-74&swLng=-75",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for missing swLng", async () => {
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=11&neLng=-74&swLat=10",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for invalid latitude value", async () => {
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=100&neLng=-74&swLat=10&swLng=-75",
+            );
+
+            expect(response.status).toBe(400);
+        });
+
+        it("should return 400 for limit exceeding 500", async () => {
+            const response = await request(app).get(
+                "/api/properties/map/bounds?neLat=11&neLng=-74&swLat=10&swLng=-75&limit=501",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+    });
+});
+
+describe("GET /api/properties/search", () => {
+    let app: express.Application;
+
+    const mockPropertyRepository = {
+        createQueryBuilder: jest.fn(),
+    };
+
+    const mockSearchResults = [
+        {
+            id: "property-uuid-1",
+            title: "Beautiful House",
+            description: "A beautiful house in the city",
+            price: 250000,
+            currency: "USD",
+            propertyType: PropertyType.HOUSE,
+            address: "123 Main St",
+            department: "Department 1",
+            municipality: "Municipality 1",
+            latitude: 10.123456,
+            longitude: -74.123456,
+            bedrooms: 3,
+            bathrooms: 2,
+            areaSqm: 150,
+            status: PropertyStatus.ACTIVE,
+            viewsCount: 10,
+            createdAt: new Date("2024-01-01"),
+            updatedAt: new Date("2024-01-01"),
+            images: [],
+            user: {
+                id: "user-uuid-1",
+                name: "John Doe",
+                email: "john@example.com",
+                profilePicture: null,
+            },
+        },
+    ];
+
+    const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn(),
+    };
+
+    beforeAll(() => {
+        app = express();
+        app.use(express.json());
+        app.use(languageMiddleware);
+
+        const router = Router();
+        router.get(
+            "/search",
+            validateQuery(SearchPropertiesQueryDto),
+            PropertiesController.searchProperties,
+        );
+        app.use("/api/properties", router);
+        app.use(errorHandler);
+    });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+            if (entity.name === "Property") {
+                return mockPropertyRepository;
+            }
+            return {};
+        });
+
+        mockPropertyRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+    });
+
+    describe("successful requests", () => {
+        it("should search properties by query string", async () => {
+            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockSearchResults, 1]);
+
+            const response = await request(app).get("/api/properties/search?q=beautiful");
+
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty("data");
+            expect(response.body).toHaveProperty("pagination");
+            expect(response.body.data).toHaveLength(1);
+            expect(mockQueryBuilder.where).toHaveBeenCalled();
+        });
+
+        it("should search with filters", async () => {
+            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockSearchResults, 1]);
+
+            const response = await request(app).get(
+                `/api/properties/search?q=house&propertyType=${PropertyType.HOUSE}&bedrooms=3`,
+            );
+
+            expect(response.status).toBe(200);
+            expect(response.body.data).toHaveLength(1);
+            expect(mockQueryBuilder.andWhere).toHaveBeenCalled();
+        });
+
+        it("should paginate search results", async () => {
+            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockSearchResults, 10]);
+
+            const response = await request(app).get(
+                "/api/properties/search?q=house&page=2&limit=5",
+            );
+
+            expect(response.status).toBe(200);
+            expect(response.body.pagination).toEqual({
+                total: 10,
+                page: 2,
+                limit: 5,
+                totalPages: 2,
+                hasNextPage: false,
+                hasPreviousPage: true,
+            });
+        });
+
+        it("should sort search results", async () => {
+            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockSearchResults, 1]);
+
+            const response = await request(app).get(
+                "/api/properties/search?q=house&sortBy=price&sortOrder=ASC",
+            );
+
+            expect(response.status).toBe(200);
+            expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith("property.price", "ASC");
+        });
+    });
+
+    describe("validation errors", () => {
+        it("should return 400 for missing search query", async () => {
+            const response = await request(app).get("/api/properties/search");
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+            expect(response.body.errors).toEqual(
+                expect.arrayContaining([expect.objectContaining({ field: "q" })]),
+            );
+        });
+
+        it("should return 400 for search query less than 2 characters", async () => {
+            const response = await request(app).get("/api/properties/search?q=a");
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for invalid property type", async () => {
+            const response = await request(app).get(
+                "/api/properties/search?q=house&propertyType=invalid",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+
+        it("should return 400 for invalid sort field", async () => {
+            const response = await request(app).get(
+                "/api/properties/search?q=house&sortBy=invalid",
+            );
+
+            expect(response.status).toBe(400);
+            expect(response.body).toHaveProperty("errors");
+        });
+    });
+
+    describe("language support", () => {
+        it("should respect Accept-Language header for Spanish", async () => {
+            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockSearchResults, 1]);
+
+            const response = await request(app)
+                .get("/api/properties/search?q=casa")
+                .set("Accept-Language", "es");
+
+            expect(response.status).toBe(200);
+        });
+
+        it("should respect Accept-Language header for English", async () => {
+            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockSearchResults, 1]);
+
+            const response = await request(app)
+                .get("/api/properties/search?q=house")
+                .set("Accept-Language", "en");
+
+            expect(response.status).toBe(200);
         });
     });
 });
