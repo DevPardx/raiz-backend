@@ -3,6 +3,8 @@ import {
     GetPropertiesQueryDto,
     MapBoundsQueryDto,
     SearchPropertiesQueryDto,
+    GetFeaturedPropertiesQueryDto,
+    GetMyPropertiesQueryDto,
 } from "../dtos/property.dto";
 import { PropertiesService } from "../services/properties.service";
 
@@ -41,6 +43,27 @@ export class PropertiesController {
         try {
             const query = req.query as unknown as SearchPropertiesQueryDto;
             const result = await PropertiesService.searchProperties(query);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static getFeaturedProperties = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const query = req.query as unknown as GetFeaturedPropertiesQueryDto;
+            const result = await PropertiesService.getFeaturedProperties(query);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static getMyProperties = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const query = req.query as unknown as GetMyPropertiesQueryDto;
+            const userId = req.user!.id;
+            const result = await PropertiesService.getMyProperties(userId, query);
             res.status(200).json(result);
         } catch (error) {
             next(error);

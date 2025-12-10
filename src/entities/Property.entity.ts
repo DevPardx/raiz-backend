@@ -24,6 +24,7 @@ import { PropertyType, PropertyStatus } from "../enums";
 @Index("idx_properties_geolocation", ["latitude", "longitude"])
 @Index("idx_properties_price", ["price"])
 @Index("idx_properties_type", ["propertyType"])
+@Index("idx_properties_is_featured", ["isFeatured"])
 export class Property {
     @PrimaryGeneratedColumn("uuid")
     id: string;
@@ -75,6 +76,9 @@ export class Property {
 
     @Column({ type: "integer", default: 0, name: "views_count" })
     viewsCount: number;
+
+    @Column({ type: "boolean", default: false, name: "is_featured" })
+    isFeatured: boolean;
 
     @Column({ type: "tsvector", nullable: true, name: "search_vector", select: false })
     searchVector: string | null;
