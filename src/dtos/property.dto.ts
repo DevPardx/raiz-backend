@@ -221,3 +221,33 @@ export class SearchPropertiesQueryDto {
     @IsIn(["ASC", "DESC"], { message: "validation:sort_order_invalid" })
     sortOrder?: "ASC" | "DESC" = "DESC";
 }
+
+export class GetFeaturedPropertiesQueryDto {
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:page_must_be_number" })
+    @Min(1, { message: "validation:page_min_value" })
+    page?: number = 1;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:limit_must_be_number" })
+    @Min(1, { message: "validation:limit_min_value" })
+    @Max(100, { message: "validation:limit_max_value" })
+    limit?: number = 20;
+}
+
+export class GetMyPropertiesQueryDto {
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:page_must_be_number" })
+    @Min(1, { message: "validation:page_min_value" })
+    page?: number = 1;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:limit_must_be_number" })
+    @Min(1, { message: "validation:limit_min_value" })
+    @Max(100, { message: "validation:limit_max_value" })
+    limit?: number = 20;
+}

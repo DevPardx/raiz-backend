@@ -5,6 +5,8 @@ import {
     GetPropertiesQueryDto,
     MapBoundsQueryDto,
     SearchPropertiesQueryDto,
+    GetFeaturedPropertiesQueryDto,
+    GetMyPropertiesQueryDto,
 } from "../dtos/property.dto";
 import { NotFoundError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
@@ -373,6 +375,135 @@ export class PropertiesService {
                     email: property.user.email,
                     profilePicture: property.user.profilePicture,
                 },
+            })),
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages,
+                hasNextPage,
+                hasPreviousPage,
+            },
+        };
+    };
+
+    static getFeaturedProperties = async (query: GetFeaturedPropertiesQueryDto) => {
+        const { page = 1, limit = 20 } = query;
+
+        const skip = (page - 1) * limit;
+
+        const where: FindOptionsWhere<Property> = {
+            isFeatured: true,
+            status: PropertyStatus.ACTIVE,
+        };
+
+        const [properties, total] = await this.getPropertyRepository().findAndCount({
+            where,
+            relations: ["images", "user"],
+            order: {
+                createdAt: "DESC",
+            },
+            skip,
+            take: limit,
+        });
+
+        const totalPages = Math.ceil(total / limit);
+        const hasNextPage = page < totalPages;
+        const hasPreviousPage = page > 1;
+
+        return {
+            data: properties.map((property) => ({
+                id: property.id,
+                title: property.title,
+                description: property.description,
+                price: property.price,
+                currency: property.currency,
+                propertyType: property.propertyType,
+                address: property.address,
+                department: property.department,
+                municipality: property.municipality,
+                latitude: property.latitude,
+                longitude: property.longitude,
+                bedrooms: property.bedrooms,
+                bathrooms: property.bathrooms,
+                areaSqm: property.areaSqm,
+                status: property.status,
+                viewsCount: property.viewsCount,
+                isFeatured: property.isFeatured,
+                createdAt: property.createdAt,
+                updatedAt: property.updatedAt,
+                images: property.images.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    displayOrder: img.displayOrder,
+                })),
+                user: {
+                    id: property.user.id,
+                    name: property.user.name,
+                    email: property.user.email,
+                    profilePicture: property.user.profilePicture,
+                },
+            })),
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages,
+                hasNextPage,
+                hasPreviousPage,
+            },
+        };
+    };
+
+    static getMyProperties = async (userId: string, query: GetMyPropertiesQueryDto) => {
+        const { page = 1, limit = 20 } = query;
+
+        const skip = (page - 1) * limit;
+
+        const where: FindOptionsWhere<Property> = {
+            userId,
+        };
+
+        const [properties, total] = await this.getPropertyRepository().findAndCount({
+            where,
+            relations: ["images"],
+            order: {
+                createdAt: "DESC",
+            },
+            skip,
+            take: limit,
+        });
+
+        const totalPages = Math.ceil(total / limit);
+        const hasNextPage = page < totalPages;
+        const hasPreviousPage = page > 1;
+
+        return {
+            data: properties.map((property) => ({
+                id: property.id,
+                title: property.title,
+                description: property.description,
+                price: property.price,
+                currency: property.currency,
+                propertyType: property.propertyType,
+                address: property.address,
+                department: property.department,
+                municipality: property.municipality,
+                latitude: property.latitude,
+                longitude: property.longitude,
+                bedrooms: property.bedrooms,
+                bathrooms: property.bathrooms,
+                areaSqm: property.areaSqm,
+                status: property.status,
+                viewsCount: property.viewsCount,
+                isFeatured: property.isFeatured,
+                createdAt: property.createdAt,
+                updatedAt: property.updatedAt,
+                images: property.images.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    displayOrder: img.displayOrder,
+                })),
             })),
             pagination: {
                 total,

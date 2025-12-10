@@ -4,9 +4,11 @@ import {
     GetPropertiesQueryDto,
     MapBoundsQueryDto,
     SearchPropertiesQueryDto,
+    GetFeaturedPropertiesQueryDto,
+    GetMyPropertiesQueryDto,
 } from "../dtos/property.dto";
 import { PropertiesController } from "../controllers/properties.controller";
-// import { authenticate } from '../middleware/auth.middleware';
+import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -21,11 +23,20 @@ router.get(
     validateQuery(SearchPropertiesQueryDto),
     PropertiesController.searchProperties,
 );
+router.get(
+    "/featured/list",
+    validateQuery(GetFeaturedPropertiesQueryDto),
+    PropertiesController.getFeaturedProperties,
+);
+router.get(
+    "/user/my-properties",
+    authenticate,
+    validateQuery(GetMyPropertiesQueryDto),
+    PropertiesController.getMyProperties,
+);
 router.get("/:id", PropertiesController.getPropertyById);
 
 // Future routes to implement:
-// router.get("/featured/list", PropertiesController.getFeaturedProperties);
-// router.get("/user/my-properties", authenticate, PropertiesController.getMyProperties);
 // router.post("/", authenticate, validateDto(CreatePropertyDto), PropertiesController.createProperty);
 // router.put("/:id", authenticate, validateDto(UpdatePropertyDto), PropertiesController.updateProperty);
 // router.delete("/:id", authenticate, PropertiesController.deleteProperty);
