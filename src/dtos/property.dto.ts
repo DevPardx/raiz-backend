@@ -10,6 +10,9 @@ import {
     MinLength,
     IsLatitude,
     IsLongitude,
+    IsArray,
+    ArrayMinSize,
+    MaxLength,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { PropertyType, PropertyStatus } from "../enums";
@@ -314,4 +317,86 @@ export class CreatePropertyDto {
     @IsNumber({}, { message: "validation:area_sqm_must_be_number" })
     @Min(0, { message: "validation:area_sqm_min_value" })
     areaSqm!: number;
+
+    @IsOptional()
+    @IsArray({ message: "validation:images_must_be_array" })
+    @ArrayMinSize(1, { message: "validation:images_min_size" })
+    @IsString({ each: true, message: "validation:image_must_be_string" })
+    images?: string[];
+}
+
+export class UpdatePropertyDto {
+    @IsOptional()
+    @IsString({ message: "validation:title_must_be_string" })
+    @MinLength(3, { message: "validation:title_min_length" })
+    @MaxLength(200, { message: "validation:title_max_length" })
+    title?: string;
+
+    @IsOptional()
+    @IsString({ message: "validation:description_must_be_string" })
+    @MinLength(10, { message: "validation:description_min_length" })
+    description?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:price_must_be_number" })
+    @Min(0, { message: "validation:price_min_value" })
+    price?: number;
+
+    @IsOptional()
+    @IsEnum(PropertyType, { message: "validation:property_type_invalid" })
+    propertyType?: PropertyType;
+
+    @IsOptional()
+    @IsString({ message: "validation:address_must_be_string" })
+    address?: string;
+
+    @IsOptional()
+    @IsString({ message: "validation:department_must_be_string" })
+    department?: string;
+
+    @IsOptional()
+    @IsString({ message: "validation:municipality_must_be_string" })
+    municipality?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:latitude_must_be_number" })
+    @IsLatitude({ message: "validation:latitude_invalid" })
+    latitude?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:longitude_must_be_number" })
+    @IsLongitude({ message: "validation:longitude_invalid" })
+    longitude?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:bedrooms_must_be_number" })
+    @Min(0, { message: "validation:bedrooms_min_value" })
+    bedrooms?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:bathrooms_must_be_number" })
+    @Min(0, { message: "validation:bathrooms_min_value" })
+    bathrooms?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:area_sqm_must_be_number" })
+    @Min(0, { message: "validation:area_sqm_min_value" })
+    areaSqm?: number;
+
+    @IsOptional()
+    @IsArray({ message: "validation:images_must_be_array" })
+    @IsString({ each: true, message: "validation:image_must_be_string" })
+    images?: string[];
+}
+
+export class UpdatePropertyStatusDto {
+    @IsNotEmpty({ message: "validation:status_required" })
+    @IsEnum(PropertyStatus, { message: "validation:property_status_invalid" })
+    status!: PropertyStatus;
 }

@@ -7,6 +7,8 @@ import {
     GetFeaturedPropertiesQueryDto,
     GetMyPropertiesQueryDto,
     CreatePropertyDto,
+    UpdatePropertyDto,
+    UpdatePropertyStatusDto,
 } from "../dtos/property.dto";
 import { PropertiesController } from "../controllers/properties.controller";
 import { authenticate } from "../middleware/auth.middleware";
@@ -35,14 +37,20 @@ router.get(
     validateQuery(GetMyPropertiesQueryDto),
     PropertiesController.getMyProperties,
 );
-router.get("/:id", PropertiesController.getPropertyById);
 router.post("/", authenticate, validateDto(CreatePropertyDto), PropertiesController.createProperty);
-
-// Future routes to implement:
-// router.put("/:id", authenticate, validateDto(UpdatePropertyDto), PropertiesController.updateProperty);
-// router.delete("/:id", authenticate, PropertiesController.deleteProperty);
-// router.patch("/:id/status", authenticate, validateDto(UpdatePropertyStatusDto), PropertiesController.updatePropertyStatus);
-// router.delete("/:id/images/:imageId", authenticate, PropertiesController.deletePropertyImage);
-// router.get("/:id/stats", authenticate, PropertiesController.getPropertyStats);
+router.put(
+    "/:id",
+    authenticate,
+    validateDto(UpdatePropertyDto),
+    PropertiesController.updateProperty,
+);
+router.delete("/:id", authenticate, PropertiesController.deleteProperty);
+router.patch(
+    "/:id/status",
+    authenticate,
+    validateDto(UpdatePropertyStatusDto),
+    PropertiesController.updatePropertyStatus,
+);
+router.get("/:id", PropertiesController.getPropertyById);
 
 export default router;
