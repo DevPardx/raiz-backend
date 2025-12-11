@@ -7,6 +7,7 @@ import {
     SearchPropertiesQueryDto,
     GetFeaturedPropertiesQueryDto,
     GetMyPropertiesQueryDto,
+    CreatePropertyDto,
 } from "../dtos/property.dto";
 import { NotFoundError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
@@ -101,7 +102,6 @@ export class PropertiesService {
                 title: property.title,
                 description: property.description,
                 price: property.price,
-                currency: property.currency,
                 propertyType: property.propertyType,
                 address: property.address,
                 department: property.department,
@@ -156,7 +156,6 @@ export class PropertiesService {
             title: property.title,
             description: property.description,
             price: property.price,
-            currency: property.currency,
             propertyType: property.propertyType,
             address: property.address,
             department: property.department,
@@ -246,7 +245,6 @@ export class PropertiesService {
             id: property.id,
             title: property.title,
             price: property.price,
-            currency: property.currency,
             propertyType: property.propertyType,
             address: property.address,
             latitude: property.latitude,
@@ -350,7 +348,6 @@ export class PropertiesService {
                 title: property.title,
                 description: property.description,
                 price: property.price,
-                currency: property.currency,
                 propertyType: property.propertyType,
                 address: property.address,
                 department: property.department,
@@ -417,7 +414,6 @@ export class PropertiesService {
                 title: property.title,
                 description: property.description,
                 price: property.price,
-                currency: property.currency,
                 propertyType: property.propertyType,
                 address: property.address,
                 department: property.department,
@@ -484,7 +480,6 @@ export class PropertiesService {
                 title: property.title,
                 description: property.description,
                 price: property.price,
-                currency: property.currency,
                 propertyType: property.propertyType,
                 address: property.address,
                 department: property.department,
@@ -513,6 +508,50 @@ export class PropertiesService {
                 hasNextPage,
                 hasPreviousPage,
             },
+        };
+    };
+
+    static createProperty = async (userId: string, propertyData: CreatePropertyDto) => {
+        const property = this.getPropertyRepository().create({
+            userId,
+            title: propertyData.title,
+            description: propertyData.description,
+            price: propertyData.price,
+            propertyType: propertyData.propertyType,
+            address: propertyData.address,
+            department: propertyData.department,
+            municipality: propertyData.municipality,
+            latitude: propertyData.latitude,
+            longitude: propertyData.longitude,
+            bedrooms: propertyData.bedrooms,
+            bathrooms: propertyData.bathrooms,
+            areaSqm: propertyData.areaSqm,
+            viewsCount: 0,
+            isFeatured: false,
+        });
+
+        const savedProperty = await this.getPropertyRepository().save(property);
+
+        return {
+            id: savedProperty.id,
+            title: savedProperty.title,
+            description: savedProperty.description,
+            price: savedProperty.price,
+            propertyType: savedProperty.propertyType,
+            address: savedProperty.address,
+            department: savedProperty.department,
+            municipality: savedProperty.municipality,
+            latitude: savedProperty.latitude,
+            longitude: savedProperty.longitude,
+            bedrooms: savedProperty.bedrooms,
+            bathrooms: savedProperty.bathrooms,
+            areaSqm: savedProperty.areaSqm,
+            status: savedProperty.status,
+            viewsCount: savedProperty.viewsCount,
+            isFeatured: savedProperty.isFeatured,
+            createdAt: savedProperty.createdAt,
+            updatedAt: savedProperty.updatedAt,
+            images: [],
         };
     };
 }

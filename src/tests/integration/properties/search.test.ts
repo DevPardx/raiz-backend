@@ -74,7 +74,6 @@ describe("GET /api/properties/search", () => {
             title: "Beautiful House",
             description: "A beautiful house in the city",
             price: 250000,
-            currency: "USD",
             propertyType: PropertyType.HOUSE,
             address: "123 Main St",
             department: "Department 1",

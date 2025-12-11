@@ -73,7 +73,6 @@ describe("GET /api/properties/map/bounds", () => {
             id: "property-uuid-1",
             title: "House in City",
             price: 250000,
-            currency: "USD",
             propertyType: PropertyType.HOUSE,
             address: "123 Main St",
             latitude: 10.5,

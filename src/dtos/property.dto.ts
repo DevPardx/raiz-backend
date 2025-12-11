@@ -251,3 +251,67 @@ export class GetMyPropertiesQueryDto {
     @Max(100, { message: "validation:limit_max_value" })
     limit?: number = 20;
 }
+
+export class CreatePropertyDto {
+    @IsNotEmpty({ message: "validation:title_required" })
+    @IsString({ message: "validation:title_must_be_string" })
+    @MinLength(3, { message: "validation:title_min_length" })
+    title!: string;
+
+    @IsNotEmpty({ message: "validation:description_required" })
+    @IsString({ message: "validation:description_must_be_string" })
+    @MinLength(10, { message: "validation:description_min_length" })
+    description!: string;
+
+    @IsNotEmpty({ message: "validation:price_required" })
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:price_must_be_number" })
+    @Min(0, { message: "validation:price_min_value" })
+    price!: number;
+
+    @IsNotEmpty({ message: "validation:property_type_required" })
+    @IsEnum(PropertyType, { message: "validation:property_type_invalid" })
+    propertyType!: PropertyType;
+
+    @IsNotEmpty({ message: "validation:address_required" })
+    @IsString({ message: "validation:address_must_be_string" })
+    address!: string;
+
+    @IsNotEmpty({ message: "validation:department_required" })
+    @IsString({ message: "validation:department_must_be_string" })
+    department!: string;
+
+    @IsNotEmpty({ message: "validation:municipality_required" })
+    @IsString({ message: "validation:municipality_must_be_string" })
+    municipality!: string;
+
+    @IsNotEmpty({ message: "validation:latitude_required" })
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:latitude_must_be_number" })
+    @IsLatitude({ message: "validation:latitude_invalid" })
+    latitude!: number;
+
+    @IsNotEmpty({ message: "validation:longitude_required" })
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:longitude_must_be_number" })
+    @IsLongitude({ message: "validation:longitude_invalid" })
+    longitude!: number;
+
+    @IsNotEmpty({ message: "validation:bedrooms_required" })
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:bedrooms_must_be_number" })
+    @Min(0, { message: "validation:bedrooms_min_value" })
+    bedrooms!: number;
+
+    @IsNotEmpty({ message: "validation:bathrooms_required" })
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:bathrooms_must_be_number" })
+    @Min(0, { message: "validation:bathrooms_min_value" })
+    bathrooms!: number;
+
+    @IsNotEmpty({ message: "validation:area_sqm_required" })
+    @Type(() => Number)
+    @IsNumber({}, { message: "validation:area_sqm_must_be_number" })
+    @Min(0, { message: "validation:area_sqm_min_value" })
+    areaSqm!: number;
+}
