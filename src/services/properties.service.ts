@@ -670,4 +670,34 @@ export class PropertiesService {
 
         return t("property_status_updated");
     };
+
+    static getPropertyStats = async (userId: string, propertyId: string, t: TFunction) => {
+        const property = await this.getPropertyRepository().findOne({
+            where: { id: propertyId },
+        });
+
+        if (!property) {
+            throw new NotFoundError(t("property_not_found"));
+        }
+
+        if (property.userId !== userId) {
+            throw new ForbiddenError(t("forbidden"));
+        }
+
+        // Calculate days since property was created
+        const now = new Date();
+        const createdAt = new Date(property.createdAt);
+        const daysActive = Math.floor(
+            (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
+        return {
+            propertyId: property.id,
+            viewsCount: property.viewsCount,
+            daysActive,
+            status: property.status,
+            isFeatured: property.isFeatured,
+            createdAt: property.createdAt,
+        };
+    };
 }

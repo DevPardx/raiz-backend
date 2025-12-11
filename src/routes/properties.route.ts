@@ -51,6 +51,7 @@ router.patch(
     validateDto(UpdatePropertyStatusDto),
     PropertiesController.updatePropertyStatus,
 );
+router.get("/:id/stats", authenticate, PropertiesController.getPropertyStats);
 router.get("/:id", PropertiesController.getPropertyById);
 
 export default router;
