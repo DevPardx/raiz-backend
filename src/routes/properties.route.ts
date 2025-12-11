@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { validateQuery } from "../middleware/validation.middleware";
+import { validateDto, validateQuery } from "../middleware/validation.middleware";
 import {
     GetPropertiesQueryDto,
     MapBoundsQueryDto,
     SearchPropertiesQueryDto,
     GetFeaturedPropertiesQueryDto,
     GetMyPropertiesQueryDto,
+    CreatePropertyDto,
 } from "../dtos/property.dto";
 import { PropertiesController } from "../controllers/properties.controller";
 import { authenticate } from "../middleware/auth.middleware";
@@ -35,9 +36,9 @@ router.get(
     PropertiesController.getMyProperties,
 );
 router.get("/:id", PropertiesController.getPropertyById);
+router.post("/", authenticate, validateDto(CreatePropertyDto), PropertiesController.createProperty);
 
 // Future routes to implement:
-// router.post("/", authenticate, validateDto(CreatePropertyDto), PropertiesController.createProperty);
 // router.put("/:id", authenticate, validateDto(UpdatePropertyDto), PropertiesController.updateProperty);
 // router.delete("/:id", authenticate, PropertiesController.deleteProperty);
 // router.patch("/:id/status", authenticate, validateDto(UpdatePropertyStatusDto), PropertiesController.updatePropertyStatus);

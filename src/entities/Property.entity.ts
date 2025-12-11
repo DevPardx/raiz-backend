@@ -41,9 +41,6 @@ export class Property {
     @Column({ type: "decimal", precision: 12, scale: 2 })
     price: number;
 
-    @Column({ type: "varchar", length: 3, default: "USD" })
-    currency: string;
-
     @Column({ type: "enum", enum: PropertyType, name: "property_type" })
     propertyType: PropertyType;
 

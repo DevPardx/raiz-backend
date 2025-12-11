@@ -5,6 +5,7 @@ import {
     SearchPropertiesQueryDto,
     GetFeaturedPropertiesQueryDto,
     GetMyPropertiesQueryDto,
+    CreatePropertyDto,
 } from "../dtos/property.dto";
 import { PropertiesService } from "../services/properties.service";
 
@@ -65,6 +66,17 @@ export class PropertiesController {
             const userId = req.user!.id;
             const result = await PropertiesService.getMyProperties(userId, query);
             res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static createProperty = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const propertyData: CreatePropertyDto = req.body;
+            const userId = req.user!.id;
+            const result = await PropertiesService.createProperty(userId, propertyData);
+            res.status(201).json(result);
         } catch (error) {
             next(error);
         }
