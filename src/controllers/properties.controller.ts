@@ -128,4 +128,15 @@ export class PropertiesController {
             next(error);
         }
     };
+
+    static getPropertyStats = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const userId = req.user!.id;
+            const result = await PropertiesService.getPropertyStats(userId, id as string, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
 }
