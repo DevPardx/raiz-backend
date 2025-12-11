@@ -20,6 +20,10 @@ jest.mock("../../../utils/logger.util", () => ({
     },
 }));
 
+jest.mock("../../../config/cloudinary.config", () => ({
+    cloudinary: {},
+}));
+
 // Import after mocks are set up
 import { errorHandler } from "../../../middleware/error.middleware";
 import { languageMiddleware } from "../../../middleware/language.middleware";

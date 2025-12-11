@@ -26,6 +26,10 @@ jest.mock("../../../utils/logger.util", () => ({
     },
 }));
 
+jest.mock("../../../config/cloudinary.config", () => ({
+    cloudinary: {},
+}));
+
 describe("GET /api/properties", () => {
     let app: express.Application;
 

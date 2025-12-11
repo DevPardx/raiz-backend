@@ -26,5 +26,9 @@
     "password_correct": "Password verified successfully.",
     "no_fields_to_update": "No fields to update.",
     "user_updated_successfully": "User updated successfully.",
-    "property_not_found": "Property not found."
+    "property_not_found": "Property not found.",
+    "property_created": "Property created successfully",
+    "property_updated": "Property updated successfully",
+    "property_status_updated": "The property status has been updated successfully.",
+    "property_deleted": "Property deleted successfully."
 }

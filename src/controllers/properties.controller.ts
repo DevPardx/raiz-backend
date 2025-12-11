@@ -6,6 +6,8 @@ import {
     GetFeaturedPropertiesQueryDto,
     GetMyPropertiesQueryDto,
     CreatePropertyDto,
+    UpdatePropertyDto,
+    UpdatePropertyStatusDto,
 } from "../dtos/property.dto";
 import { PropertiesService } from "../services/properties.service";
 
@@ -75,8 +77,53 @@ export class PropertiesController {
         try {
             const propertyData: CreatePropertyDto = req.body;
             const userId = req.user!.id;
-            const result = await PropertiesService.createProperty(userId, propertyData);
+            const result = await PropertiesService.createProperty(userId, propertyData, req.t);
             res.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static updateProperty = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const propertyData: UpdatePropertyDto = req.body;
+            const userId = req.user!.id;
+            const result = await PropertiesService.updateProperty(
+                userId,
+                id as string,
+                propertyData,
+                req.t,
+            );
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static deleteProperty = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const userId = req.user!.id;
+            const result = await PropertiesService.deleteProperty(userId, id as string, req.t);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    static updatePropertyStatus = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const statusData: UpdatePropertyStatusDto = req.body;
+            const userId = req.user!.id;
+            const result = await PropertiesService.updatePropertyStatus(
+                userId,
+                id as string,
+                statusData,
+                req.t,
+            );
+            res.status(200).json(result);
         } catch (error) {
             next(error);
         }

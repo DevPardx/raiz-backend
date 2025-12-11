@@ -26,5 +26,9 @@
     "password_correct": "Contraseña verificada exitosamente.",
     "no_fields_to_update": "No hay campos que actualizar.",
     "user_updated_successfully": "Usuario actualizado exitosamente.",
-    "property_not_found": "Propiedad no encontrada."
+    "property_not_found": "Propiedad no encontrada.",
+    "property_created": "Propiedad creada exitosamente",
+    "property_updated": "Propiedad actualizada exitosamente",
+    "property_status_updated": "El estado de la propiedad ha sido actualizado exitosamente.",
+    "property_deleted": "La propiedad ha sido eliminada exitosamente."
 }

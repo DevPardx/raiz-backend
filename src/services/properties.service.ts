@@ -1,6 +1,7 @@
 import { Repository, FindOptionsWhere, Between, MoreThanOrEqual, LessThanOrEqual } from "typeorm";
 import { TFunction } from "i18next";
 import { Property } from "../entities/Property.entity";
+import { PropertyImage } from "../entities/PropertyImage.entity";
 import {
     GetPropertiesQueryDto,
     MapBoundsQueryDto,
@@ -8,14 +9,21 @@ import {
     GetFeaturedPropertiesQueryDto,
     GetMyPropertiesQueryDto,
     CreatePropertyDto,
+    UpdatePropertyDto,
+    UpdatePropertyStatusDto,
 } from "../dtos/property.dto";
-import { NotFoundError } from "../handler/error.handler";
+import { NotFoundError, ForbiddenError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
 import { PropertyStatus } from "../enums";
+import { uploadMultipleImages, deleteMultipleImages } from "../utils/cloudinary.util";
 
 export class PropertiesService {
     private static getPropertyRepository(): Repository<Property> {
         return AppDataSource.getRepository(Property);
+    }
+
+    private static getPropertyImageRepository(): Repository<PropertyImage> {
+        return AppDataSource.getRepository(PropertyImage);
     }
 
     static getAllProperties = async (query: GetPropertiesQueryDto) => {
@@ -511,7 +519,11 @@ export class PropertiesService {
         };
     };
 
-    static createProperty = async (userId: string, propertyData: CreatePropertyDto) => {
+    static createProperty = async (
+        userId: string,
+        propertyData: CreatePropertyDto,
+        t: TFunction,
+    ) => {
         const property = this.getPropertyRepository().create({
             userId,
             title: propertyData.title,
@@ -532,26 +544,130 @@ export class PropertiesService {
 
         const savedProperty = await this.getPropertyRepository().save(property);
 
-        return {
-            id: savedProperty.id,
-            title: savedProperty.title,
-            description: savedProperty.description,
-            price: savedProperty.price,
-            propertyType: savedProperty.propertyType,
-            address: savedProperty.address,
-            department: savedProperty.department,
-            municipality: savedProperty.municipality,
-            latitude: savedProperty.latitude,
-            longitude: savedProperty.longitude,
-            bedrooms: savedProperty.bedrooms,
-            bathrooms: savedProperty.bathrooms,
-            areaSqm: savedProperty.areaSqm,
-            status: savedProperty.status,
-            viewsCount: savedProperty.viewsCount,
-            isFeatured: savedProperty.isFeatured,
-            createdAt: savedProperty.createdAt,
-            updatedAt: savedProperty.updatedAt,
-            images: [],
-        };
+        if (propertyData.images && propertyData.images.length > 0) {
+            const uploadedImages = await uploadMultipleImages(propertyData.images, "properties");
+
+            const imageEntities = uploadedImages.map((img, index) =>
+                this.getPropertyImageRepository().create({
+                    propertyId: savedProperty.id,
+                    url: img.url,
+                    cloudinaryId: img.publicId,
+                    displayOrder: index,
+                }),
+            );
+
+            await this.getPropertyImageRepository().save(imageEntities);
+        }
+
+        return t("property_created");
+    };
+
+    static updateProperty = async (
+        userId: string,
+        propertyId: string,
+        propertyData: UpdatePropertyDto,
+        t: TFunction,
+    ) => {
+        const property = await this.getPropertyRepository().findOne({
+            where: { id: propertyId },
+            relations: ["images"],
+        });
+
+        if (!property) {
+            throw new NotFoundError(t("property_not_found"));
+        }
+
+        if (property.userId !== userId) {
+            throw new ForbiddenError(t("forbidden"));
+        }
+
+        if (propertyData.title !== undefined) property.title = propertyData.title;
+        if (propertyData.description !== undefined) property.description = propertyData.description;
+        if (propertyData.price !== undefined) property.price = propertyData.price;
+        if (propertyData.propertyType !== undefined)
+            property.propertyType = propertyData.propertyType;
+        if (propertyData.address !== undefined) property.address = propertyData.address;
+        if (propertyData.department !== undefined) property.department = propertyData.department;
+        if (propertyData.municipality !== undefined)
+            property.municipality = propertyData.municipality;
+        if (propertyData.latitude !== undefined) property.latitude = propertyData.latitude;
+        if (propertyData.longitude !== undefined) property.longitude = propertyData.longitude;
+        if (propertyData.bedrooms !== undefined) property.bedrooms = propertyData.bedrooms;
+        if (propertyData.bathrooms !== undefined) property.bathrooms = propertyData.bathrooms;
+        if (propertyData.areaSqm !== undefined) property.areaSqm = propertyData.areaSqm;
+
+        const updatedProperty = await this.getPropertyRepository().save(property);
+
+        if (propertyData.images && propertyData.images.length > 0) {
+            if (property.images.length > 0) {
+                const oldCloudinaryIds = property.images.map((img) => img.cloudinaryId);
+                await deleteMultipleImages(oldCloudinaryIds);
+
+                await this.getPropertyImageRepository().delete({ propertyId });
+            }
+
+            const uploadedImages = await uploadMultipleImages(propertyData.images, "properties");
+
+            const imageEntities = uploadedImages.map((img, index) =>
+                this.getPropertyImageRepository().create({
+                    propertyId: updatedProperty.id,
+                    url: img.url,
+                    cloudinaryId: img.publicId,
+                    displayOrder: index,
+                }),
+            );
+
+            property.images = await this.getPropertyImageRepository().save(imageEntities);
+        }
+
+        return t("property_updated");
+    };
+
+    static deleteProperty = async (userId: string, propertyId: string, t: TFunction) => {
+        const property = await this.getPropertyRepository().findOne({
+            where: { id: propertyId },
+            relations: ["images"],
+        });
+
+        if (!property) {
+            throw new NotFoundError(t("property_not_found"));
+        }
+
+        if (property.userId !== userId) {
+            throw new ForbiddenError(t("forbidden"));
+        }
+
+        if (property.images.length > 0) {
+            const cloudinaryIds = property.images.map((img) => img.cloudinaryId);
+            await deleteMultipleImages(cloudinaryIds);
+        }
+
+        await this.getPropertyRepository().remove(property);
+
+        return t("property_deleted");
+    };
+
+    static updatePropertyStatus = async (
+        userId: string,
+        propertyId: string,
+        statusData: UpdatePropertyStatusDto,
+        t: TFunction,
+    ) => {
+        const property = await this.getPropertyRepository().findOne({
+            where: { id: propertyId },
+        });
+
+        if (!property) {
+            throw new NotFoundError(t("property_not_found"));
+        }
+
+        if (property.userId !== userId) {
+            throw new ForbiddenError(t("forbidden"));
+        }
+
+        property.status = statusData.status;
+        await this.getPropertyRepository().save(property);
+
+        return t("property_status_updated");
     };
 }

@@ -20,6 +20,10 @@ interface EnvConfig {
     SMTP_PORT: number;
     SMTP_USER: string;
     SMTP_PASS: string;
+
+    CLOUDINARY_CLOUD_NAME: string;
+    CLOUDINARY_API_KEY: string;
+    CLOUDINARY_API_SECRET: string;
 }
 
 const requiredEnvVars: (keyof EnvConfig)[] = [
@@ -41,6 +45,10 @@ const requiredEnvVars: (keyof EnvConfig)[] = [
     "SMTP_PORT",
     "SMTP_USER",
     "SMTP_PASS",
+
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
 ];
 
 export function validateEnv(): void {
@@ -68,6 +76,14 @@ export function validateEnv(): void {
 
         if (process.env.POSTGRES_PASSWORD === "password") {
             warnings.push("POSTGRES_PASSWORD appears to be a default value");
+        }
+
+        if (
+            process.env.CLOUDINARY_API_SECRET &&
+            process.env.CLOUDINARY_API_KEY &&
+            process.env.CLOUDINARY_CLOUD_NAME
+        ) {
+            warnings.push("CLOUDINARY credentials are missing");
         }
     }
 
@@ -109,4 +125,8 @@ export const env: EnvConfig = {
     SMTP_PORT: +process.env.SMTP_PORT!,
     SMTP_USER: process.env.SMTP_USER!,
     SMTP_PASS: process.env.SMTP_PASS!,
+
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME!,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY!,
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET!,
 };
