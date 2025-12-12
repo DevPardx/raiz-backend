@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { Conversation } from "./Conversation.entity";
 import { User } from "./User.entity";
+import { MessageType, MessageStatus } from "../enums";
 
 @Entity("messages")
 @Index("idx_messages_conversation_id", ["conversationId"])
@@ -24,11 +25,27 @@ export class Messages {
     @Column({ type: "uuid", name: "sender_id" })
     senderId: string;
 
+    @Column({ type: "enum", enum: MessageType, default: MessageType.TEXT })
+    type: MessageType;
+
     @Column({ type: "text" })
     content: string;
 
+    @Column({ type: "text", name: "image_url", nullable: true })
+    imageUrl: string | null;
+
+    @Column({
+        type: "enum",
+        enum: MessageStatus,
+        default: MessageStatus.SENT,
+    })
+    status: MessageStatus;
+
     @Column({ type: "boolean", default: false, name: "is_read" })
     isRead: boolean;
+
+    @Column({ type: "timestamp", name: "read_at", nullable: true })
+    readAt: Date | null;
 
     @CreateDateColumn({ name: "created_at" })
     createdAt: Date;

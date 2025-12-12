@@ -34,5 +34,12 @@
     "favorite_added": "Property added to favorites successfully.",
     "favorite_removed": "Property removed from favorites successfully.",
     "favorite_already_exists": "This property is already in your favorites.",
-    "favorite_not_found": "Favorite not found."
+    "favorite_not_found": "Favorite not found.",
+    "conversation_not_found": "Conversation not found.",
+    "conversation_created": "Conversation created successfully.",
+    "conversation_already_exists": "A conversation already exists for this property.",
+    "message_sent": "Message sent successfully.",
+    "messages_marked_as_read": "Messages marked as read successfully.",
+    "cannot_message_own_property": "You cannot start a conversation on your own property.",
+    "invalid_participant": "You are not a participant in this conversation."
 }

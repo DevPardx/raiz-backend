@@ -40,7 +40,6 @@ export class FavoritesService {
     };
 
     static addFavorite = async (userId: string, propertyId: string, t: TFunction) => {
-        // Check if property exists
         const property = await this.getPropertyRepository().findOne({
             where: { id: propertyId },
         });
@@ -49,7 +48,6 @@ export class FavoritesService {
             throw new NotFoundError(t("property_not_found"));
         }
 
-        // Check if already favorited
         const existingFavorite = await this.getFavoritesRepository().findOne({
             where: { userId, propertyId },
         });
@@ -58,7 +56,6 @@ export class FavoritesService {
             throw new ConflictError(t("favorite_already_exists"));
         }
 
-        // Create favorite
         const favorite = this.getFavoritesRepository().create({
             userId,
             propertyId,

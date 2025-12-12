@@ -33,6 +33,18 @@ export class Conversation {
     @Column({ type: "uuid", name: "seller_id" })
     sellerId: string;
 
+    @Column({ type: "text", name: "last_message", nullable: true })
+    lastMessage: string | null;
+
+    @Column({ type: "timestamp", name: "last_message_at", nullable: true })
+    lastMessageAt: Date | null;
+
+    @Column({ type: "int", name: "buyer_unread_count", default: 0 })
+    buyerUnreadCount: number;
+
+    @Column({ type: "int", name: "seller_unread_count", default: 0 })
+    sellerUnreadCount: number;
+
     @CreateDateColumn({ name: "created_at" })
     createdAt: Date;
 

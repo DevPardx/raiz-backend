@@ -210,7 +210,6 @@ export class PropertiesService {
 
         const where: FindOptionsWhere<Property> = {};
 
-        // Filter by map bounds
         where.latitude = Between(swLat, neLat);
         where.longitude = Between(swLng, neLng);
 
@@ -293,13 +292,11 @@ export class PropertiesService {
             .leftJoinAndSelect("property.images", "images")
             .leftJoinAndSelect("property.user", "user");
 
-        // Text search in title, description, and address
         queryBuilder.where(
             "(property.title ILIKE :search OR property.description ILIKE :search OR property.address ILIKE :search)",
             { search: `%${q}%` },
         );
 
-        // Apply filters
         if (propertyType) {
             queryBuilder.andWhere("property.propertyType = :propertyType", { propertyType });
         }
@@ -337,11 +334,9 @@ export class PropertiesService {
             queryBuilder.andWhere("property.price <= :maxPrice", { maxPrice });
         }
 
-        // Pagination
         const skip = (page - 1) * limit;
         queryBuilder.skip(skip).take(limit);
 
-        // Sorting
         queryBuilder.orderBy(`property.${sortBy}`, sortOrder);
 
         const [properties, total] = await queryBuilder.getManyAndCount();
@@ -684,7 +679,6 @@ export class PropertiesService {
             throw new ForbiddenError(t("forbidden"));
         }
 
-        // Calculate days since property was created
         const now = new Date();
         const createdAt = new Date(property.createdAt);
         const daysActive = Math.floor(

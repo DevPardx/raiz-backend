@@ -21,3 +21,14 @@ export enum PropertyStatus {
     PAUSED = "paused",
     SOLD = "sold",
 }
+
+export enum MessageType {
+    TEXT = "text",
+    IMAGE = "image",
+}
+
+export enum MessageStatus {
+    SENT = "sent",
+    DELIVERED = "delivered",
+    READ = "read",
+}
