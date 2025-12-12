@@ -34,5 +34,12 @@
     "favorite_added": "Propiedad agregada a favoritos exitosamente.",
     "favorite_removed": "Propiedad eliminada de favoritos exitosamente.",
     "favorite_already_exists": "Esta propiedad ya está en tus favoritos.",
-    "favorite_not_found": "Favorito no encontrado."
+    "favorite_not_found": "Favorito no encontrado.",
+    "conversation_not_found": "Conversación no encontrada.",
+    "conversation_created": "Conversación creada exitosamente.",
+    "conversation_already_exists": "Ya existe una conversación para esta propiedad.",
+    "message_sent": "Mensaje enviado exitosamente.",
+    "messages_marked_as_read": "Mensajes marcados como leídos exitosamente.",
+    "cannot_message_own_property": "No puedes iniciar una conversación en tu propia propiedad.",
+    "invalid_participant": "No eres participante de esta conversación."
 }

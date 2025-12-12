@@ -29,6 +29,14 @@ jest.mock("../../../config/cloudinary.config", () => ({
     cloudinary: {},
 }));
 
+jest.mock("socket.io", () => ({
+    Server: jest.fn().mockImplementation(() => ({
+        use: jest.fn(),
+        on: jest.fn(),
+        emit: jest.fn(),
+    })),
+}));
+
 describe("GET /api/properties/:id/stats", () => {
     let app: express.Application;
 
