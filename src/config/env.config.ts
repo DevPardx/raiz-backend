@@ -24,6 +24,10 @@ interface EnvConfig {
     CLOUDINARY_CLOUD_NAME: string;
     CLOUDINARY_API_KEY: string;
     CLOUDINARY_API_SECRET: string;
+
+    VAPID_PUBLIC_KEY: string;
+    VAPID_PRIVATE_KEY: string;
+    VAPID_SUBJECT: string;
 }
 
 const requiredEnvVars: (keyof EnvConfig)[] = [
@@ -49,6 +53,10 @@ const requiredEnvVars: (keyof EnvConfig)[] = [
     "CLOUDINARY_CLOUD_NAME",
     "CLOUDINARY_API_KEY",
     "CLOUDINARY_API_SECRET",
+
+    "VAPID_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY",
+    "VAPID_SUBJECT",
 ];
 
 export function validateEnv(): void {
@@ -129,4 +137,8 @@ export const env: EnvConfig = {
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME!,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY!,
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET!,
+
+    VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY!,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY!,
+    VAPID_SUBJECT: process.env.VAPID_SUBJECT!,
 };

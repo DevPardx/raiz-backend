@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.route";
 import propertiesRoutes from "./routes/properties.route";
 import favoritesRoutes from "./routes/favorites.route";
 import conversationsRoutes from "./routes/conversations.route";
+import notificationsRoutes from "./routes/notifications.route";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertiesRoutes);
 app.use("/api/favorites", favoritesRoutes);
 app.use("/api/conversations", conversationsRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 app.use(errorHandler);
 

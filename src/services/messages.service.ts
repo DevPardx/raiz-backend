@@ -7,6 +7,8 @@ import { NotFoundError, ForbiddenError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
 import { MessageType, MessageStatus } from "../enums";
 import { uploadImage } from "../utils/cloudinary.util";
+import { NotificationsService } from "./notifications.service";
+import logger from "../utils/logger.util";
 
 export class MessagesService {
     private static getMessagesRepository(): Repository<Messages> {
@@ -74,6 +76,28 @@ export class MessagesService {
             where: { id: savedMessage.id },
             relations: ["sender"],
         });
+
+        const recipientId =
+            conversation.buyerId === userId ? conversation.sellerId : conversation.buyerId;
+        const senderName = fullMessage?.sender?.name || "Someone";
+        const notificationBody = type === MessageType.TEXT ? content : "Sent an image";
+
+        try {
+            await NotificationsService.sendNotificationToUser(recipientId, {
+                title: `New message from ${senderName}`,
+                body: notificationBody,
+                icon: fullMessage?.sender?.profilePicture || "/icon-192x192.png",
+                badge: "/badge-72x72.png",
+                tag: `conversation-${conversationId}`,
+                data: {
+                    conversationId,
+                    messageId: savedMessage.id,
+                    url: `/conversations/${conversationId}`,
+                },
+            });
+        } catch (error) {
+            logger?.error?.("Failed to send push notification:", error);
+        }
 
         return fullMessage;
     };

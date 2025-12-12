@@ -42,5 +42,12 @@
     "messages_marked_as_read": "Mensajes marcados como leídos exitosamente.",
     "cannot_message_own_property": "No puedes iniciar una conversación en tu propia propiedad.",
     "invalid_participant": "No eres participante de esta conversación.",
-    "profile_picture_upload_failed": "Error al subir la foto de perfil. Por favor, inténtalo de nuevo."
+    "profile_picture_upload_failed": "Error al subir la foto de perfil. Por favor, inténtalo de nuevo.",
+    "subscription_created": "Suscripción a notificaciones push creada exitosamente.",
+    "subscription_updated": "Suscripción a notificaciones push actualizada.",
+    "subscription_deleted": "Suscripción a notificaciones push eliminada exitosamente.",
+    "subscription_not_found": "Suscripción a notificaciones push no encontrada.",
+    "test_notification_title": "Notificación de Prueba",
+    "test_notification_body": "Esta es una notificación de prueba de Raíz Bienes Raíces.",
+    "test_notification_sent": "Notificación de prueba enviada exitosamente."
 }

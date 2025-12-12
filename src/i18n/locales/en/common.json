@@ -42,5 +42,12 @@
     "messages_marked_as_read": "Messages marked as read successfully.",
     "cannot_message_own_property": "You cannot start a conversation on your own property.",
     "invalid_participant": "You are not a participant in this conversation.",
-    "profile_picture_upload_failed": "Failed to upload profile picture. Please try again."
+    "profile_picture_upload_failed": "Failed to upload profile picture. Please try again.",
+    "subscription_created": "Successfully subscribed to push notifications.",
+    "subscription_updated": "Push notification subscription updated.",
+    "subscription_deleted": "Successfully unsubscribed from push notifications.",
+    "subscription_not_found": "Push notification subscription not found.",
+    "test_notification_title": "Test Notification",
+    "test_notification_body": "This is a test notification from Raiz Real Estate.",
+    "test_notification_sent": "Test notification sent successfully."
 }
