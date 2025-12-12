@@ -69,7 +69,6 @@ export const validateQuery = (dtoClass: any) => {
                 throw new BadRequestError(req.t("validation_failed"), formattedErrors);
             }
 
-            // Use Object.defineProperty to avoid readonly property error in Express 5
             Object.defineProperty(req, "query", {
                 value: dtoInstance,
                 writable: true,
