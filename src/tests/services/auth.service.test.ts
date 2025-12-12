@@ -1,13 +1,39 @@
 import { TFunction } from "i18next";
-import { AuthService } from "../../services/auth.service";
-import { AppDataSource } from "../../config/typeorm.config";
-import { transporter } from "../../config/email.config";
-import { ConflictError, NotFoundError, BadRequestError } from "../../handler/error.handler";
-import { UserRole } from "../../enums";
-import * as bcryptUtil from "../../utils/bcrypt.util";
-import * as tokenUtil from "../../utils/token.util";
 
-// Mock dependencies
+// Mock dependencies BEFORE imports
+jest.mock("../../utils/logger.util", () => ({
+    default: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+    },
+}));
+
+jest.mock("../../config/cloudinary.config", () => ({
+    cloudinary: {
+        config: jest.fn(),
+        uploader: {
+            upload: jest.fn(),
+            destroy: jest.fn(),
+        },
+    },
+}));
+
+jest.mock("socket.io", () => ({
+    Server: jest.fn().mockImplementation(() => ({
+        use: jest.fn(),
+        on: jest.fn(),
+        emit: jest.fn(),
+    })),
+}));
+
+jest.mock("../../utils/cloudinary.util", () => ({
+    uploadImage: jest.fn(),
+    extractPublicIdFromUrl: jest.fn(),
+    deleteImage: jest.fn(),
+}));
+
 jest.mock("../../config/typeorm.config", () => ({
     AppDataSource: {
         getRepository: jest.fn(),
@@ -45,6 +71,15 @@ jest.mock("../../emails/emailTemplates", () => ({
             .mockResolvedValue("<html>Reset Password Email</html>"),
     },
 }));
+
+// Import after mocks
+import { AuthService } from "../../services/auth.service";
+import { AppDataSource } from "../../config/typeorm.config";
+import { transporter } from "../../config/email.config";
+import { ConflictError, NotFoundError, BadRequestError } from "../../handler/error.handler";
+import { UserRole } from "../../enums";
+import * as bcryptUtil from "../../utils/bcrypt.util";
+import * as tokenUtil from "../../utils/token.util";
 
 describe("AuthService", () => {
     // Mock translation function - cast through unknown to satisfy TFunction type
