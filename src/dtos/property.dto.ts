@@ -322,7 +322,7 @@ export class CreatePropertyDto {
     @IsArray({ message: "validation:images_must_be_array" })
     @ArrayMinSize(1, { message: "validation:images_min_size" })
     @IsString({ each: true, message: "validation:image_must_be_string" })
-    images?: string[];
+    images!: string[];
 }
 
 export class UpdatePropertyDto {
