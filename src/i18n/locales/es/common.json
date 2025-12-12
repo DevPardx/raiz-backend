@@ -41,5 +41,6 @@
     "message_sent": "Mensaje enviado exitosamente.",
     "messages_marked_as_read": "Mensajes marcados como leídos exitosamente.",
     "cannot_message_own_property": "No puedes iniciar una conversación en tu propia propiedad.",
-    "invalid_participant": "No eres participante de esta conversación."
+    "invalid_participant": "No eres participante de esta conversación.",
+    "profile_picture_upload_failed": "Error al subir la foto de perfil. Por favor, inténtalo de nuevo."
 }

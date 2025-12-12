@@ -32,6 +32,7 @@ import {
 import { transporter } from "../config/email.config";
 import { EmailTemplates } from "../emails/emailTemplates";
 import { refreshTokenExpiresIn, tokenExpiresIn } from "../utils";
+import { uploadImage, extractPublicIdFromUrl, deleteImage } from "../utils/cloudinary.util";
 
 export class AuthService {
     private static getUserRepository(): Repository<User> {
@@ -351,7 +352,40 @@ export class AuthService {
         }
 
         if (userData.profilePicture !== undefined) {
-            updateData.profilePicture = userData.profilePicture;
+            const isBase64 =
+                userData.profilePicture.startsWith("data:image/") ||
+                userData.profilePicture.match(/^[A-Za-z0-9+/=]+$/);
+
+            if (isBase64) {
+                const currentUser = await this.getUserRepository().findOne({
+                    where: { id: userId },
+                    select: ["profilePicture"],
+                });
+
+                if (currentUser?.profilePicture) {
+                    try {
+                        const publicId = extractPublicIdFromUrl(currentUser.profilePicture);
+                        if (publicId) {
+                            await deleteImage(publicId);
+                        }
+                    } catch (error) {
+                        console.error("Failed to delete old profile picture:", error);
+                    }
+                }
+
+                try {
+                    const result = await uploadImage(userData.profilePicture, "profile-pictures");
+                    updateData.profilePicture = result.url;
+                } catch (error) {
+                    console.error("Profile picture upload error:", error);
+                    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                    throw new BadRequestError(
+                        `${t("profile_picture_upload_failed")} - ${errorMessage}`,
+                    );
+                }
+            } else {
+                updateData.profilePicture = userData.profilePicture;
+            }
         }
 
         if (Object.keys(updateData).length === 0) {
