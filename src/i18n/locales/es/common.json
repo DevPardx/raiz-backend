@@ -30,5 +30,9 @@
     "property_created": "Propiedad creada exitosamente",
     "property_updated": "Propiedad actualizada exitosamente",
     "property_status_updated": "El estado de la propiedad ha sido actualizado exitosamente.",
-    "property_deleted": "La propiedad ha sido eliminada exitosamente."
+    "property_deleted": "La propiedad ha sido eliminada exitosamente.",
+    "favorite_added": "Propiedad agregada a favoritos exitosamente.",
+    "favorite_removed": "Propiedad eliminada de favoritos exitosamente.",
+    "favorite_already_exists": "Esta propiedad ya está en tus favoritos.",
+    "favorite_not_found": "Favorito no encontrado."
 }

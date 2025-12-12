@@ -30,5 +30,9 @@
     "property_created": "Property created successfully",
     "property_updated": "Property updated successfully",
     "property_status_updated": "The property status has been updated successfully.",
-    "property_deleted": "Property deleted successfully."
+    "property_deleted": "Property deleted successfully.",
+    "favorite_added": "Property added to favorites successfully.",
+    "favorite_removed": "Property removed from favorites successfully.",
+    "favorite_already_exists": "This property is already in your favorites.",
+    "favorite_not_found": "Favorite not found."
 }

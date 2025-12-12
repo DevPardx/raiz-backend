@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import { languageMiddleware } from "./middleware/language.middleware";
 import authRoutes from "./routes/auth.route";
 import propertiesRoutes from "./routes/properties.route";
+import favoritesRoutes from "./routes/favorites.route";
 
 const app = express();
 
@@ -27,6 +28,7 @@ connectDB();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertiesRoutes);
+app.use("/api/favorites", favoritesRoutes);
 
 app.use(errorHandler);
 
