@@ -41,9 +41,11 @@ export const uploadImage = async (
             url: result.secure_url,
             publicId: result.public_id,
         };
-    } catch {
-        logger.error("Error uploading image to Cloudinary:");
-        throw new Error("Failed to upload image");
+    } catch (error) {
+        logger.error("Error uploading image to Cloudinary:", error);
+        throw new Error(
+            `Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
     }
 };
 
@@ -77,5 +79,16 @@ export const deleteMultipleImages = async (publicIds: string[]): Promise<void> =
     } catch (error) {
         logger.error("Error deleting multiple images from Cloudinary:", error);
         throw new Error("Failed to delete images");
+    }
+};
+
+export const extractPublicIdFromUrl = (url: string): string | null => {
+    try {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.\w+$/;
+        const match = url.match(regex);
+        return match?.[1] ?? null;
+    } catch (error) {
+        logger.error("Error extracting public ID from URL:", error);
+        return null;
     }
 };

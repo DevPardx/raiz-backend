@@ -53,6 +53,18 @@ jest.mock("../../utils/logger.util", () => ({
     },
 }));
 
+jest.mock("../../config/cloudinary.config", () => ({
+    cloudinary: {},
+}));
+
+jest.mock("socket.io", () => ({
+    Server: jest.fn().mockImplementation(() => ({
+        use: jest.fn(),
+        on: jest.fn(),
+        emit: jest.fn(),
+    })),
+}));
+
 // Import after mocks are set up
 import { errorHandler } from "../../middleware/error.middleware";
 import { languageMiddleware } from "../../middleware/language.middleware";
