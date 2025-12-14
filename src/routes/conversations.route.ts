@@ -8,6 +8,7 @@ import {
     SendMessageDto,
 } from "../dtos/conversation.dto";
 import { ConversationsController } from "../controllers/conversations.controller";
+import { messageLimiter } from "../config/rate-limit.config";
 
 const router = Router();
 
@@ -37,6 +38,7 @@ router.get(
 router.post(
     "/:id/messages",
     authenticate,
+    messageLimiter,
     validateDto(SendMessageDto),
     ConversationsController.sendMessage,
 );

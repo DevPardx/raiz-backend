@@ -64,7 +64,8 @@ export function validateEnv(): void {
     const warnings: string[] = [];
 
     for (const envVar of requiredEnvVars) {
-        if (process.env.NODE_ENV === "production") {
+        // Skip validation in test environment
+        if (process.env.NODE_ENV === "test") {
             continue;
         }
 
@@ -87,9 +88,9 @@ export function validateEnv(): void {
         }
 
         if (
-            process.env.CLOUDINARY_API_SECRET &&
-            process.env.CLOUDINARY_API_KEY &&
-            process.env.CLOUDINARY_CLOUD_NAME
+            !process.env.CLOUDINARY_API_SECRET &&
+            !process.env.CLOUDINARY_API_KEY &&
+            !process.env.CLOUDINARY_CLOUD_NAME
         ) {
             warnings.push("CLOUDINARY credentials are missing");
         }
