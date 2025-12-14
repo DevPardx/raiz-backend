@@ -1,5 +1,7 @@
 import rateLimit, { RateLimitRequestHandler } from "express-rate-limit";
+import RedisStore from "rate-limit-redis";
 import { Request, Response } from "express";
+import { redisClient } from "./redis.config";
 
 const createRateLimiter = (
     windowMs: number,
@@ -13,6 +15,9 @@ const createRateLimiter = (
         standardHeaders: true,
         legacyHeaders: false,
         skipSuccessfulRequests,
+        store: new RedisStore({
+            sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+        }),
         handler: (req: Request, res: Response) => {
             const message = req.t ? req.t(translationKey) : translationKey;
             res.status(429).json({
