@@ -4,6 +4,7 @@ import {
     ConfirmPasswordDto,
     ForgotPasswordDto,
     LoginUserDto,
+    LogoutDto,
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
@@ -86,8 +87,8 @@ export class AuthController {
 
     static logout = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { refreshToken } = req.body;
-            const result = await AuthService.logout(refreshToken, req.t);
+            const logoutData: LogoutDto = req.body;
+            const result = await AuthService.logout(logoutData.refreshToken, req.t);
             res.status(200).json(result);
         } catch (error) {
             next(error);

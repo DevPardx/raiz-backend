@@ -3,18 +3,22 @@ import { env } from "../config/env.config";
 
 export const generateToken = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-export const generateJWT = (payload: object) => {
-    return jwt.sign(payload, env.JWT_SECRET, { expiresIn: "1d" });
+export const generateJWT = (payload: object): string => {
+    return jwt.sign(payload, env.JWT_SECRET as jwt.Secret, {
+        expiresIn: env.JWT_EXPIRATION as jwt.SignOptions["expiresIn"],
+    });
 };
 
-export const verifyJWT = (token: string) => {
-    return jwt.verify(token, env.JWT_SECRET);
+export const verifyJWT = (token: string): string | jwt.JwtPayload => {
+    return jwt.verify(token, env.JWT_SECRET as jwt.Secret) as string | jwt.JwtPayload;
 };
 
-export const generateRefreshToken = (payload: object) => {
-    return jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+export const generateRefreshToken = (payload: object): string => {
+    return jwt.sign(payload, env.JWT_REFRESH_SECRET as jwt.Secret, {
+        expiresIn: env.JWT_REFRESH_EXPIRATION as jwt.SignOptions["expiresIn"],
+    });
 };
 
-export const verifyRefreshToken = (token: string) => {
-    return jwt.verify(token, env.JWT_REFRESH_SECRET);
+export const verifyRefreshToken = (token: string): string | jwt.JwtPayload => {
+    return jwt.verify(token, env.JWT_REFRESH_SECRET as jwt.Secret) as string | jwt.JwtPayload;
 };

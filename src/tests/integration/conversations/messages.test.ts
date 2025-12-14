@@ -36,6 +36,19 @@ jest.mock("../../../utils/cloudinary.util", () => ({
     }),
 }));
 
+jest.mock("../../../services/notifications.service", () => ({
+    NotificationsService: {
+        sendNotificationToUser: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
+jest.mock("../../../config/web-push.config", () => ({
+    vapidKeys: {
+        publicKey: "test-public-key",
+        privateKey: "test-private-key",
+    },
+}));
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const mockAuthenticate = (req: any, _res: any, next: any) => {
     req.user = {
@@ -62,6 +75,11 @@ describe("Conversation Messages", () => {
         create: jest.fn(),
         save: jest.fn(),
         findOne: jest.fn(),
+        createQueryBuilder: jest.fn().mockReturnValue({
+            leftJoinAndSelect: jest.fn().mockReturnThis(),
+            where: jest.fn().mockReturnThis(),
+            getOne: jest.fn(),
+        }),
     };
 
     const mockUser = {
@@ -246,7 +264,10 @@ describe("Conversation Messages", () => {
 
             mockMessagesRepository.create.mockReturnValue(newMessage);
             mockMessagesRepository.save.mockResolvedValue(newMessage);
-            mockMessagesRepository.findOne.mockResolvedValue({
+
+            // Mock the createQueryBuilder chain
+            const queryBuilder = mockMessagesRepository.createQueryBuilder();
+            queryBuilder.getOne.mockResolvedValue({
                 ...newMessage,
                 sender: mockUser,
             });
@@ -283,7 +304,10 @@ describe("Conversation Messages", () => {
 
             mockMessagesRepository.create.mockReturnValue(imageMessage);
             mockMessagesRepository.save.mockResolvedValue(imageMessage);
-            mockMessagesRepository.findOne.mockResolvedValue({
+
+            // Mock the createQueryBuilder chain
+            const queryBuilder = mockMessagesRepository.createQueryBuilder();
+            queryBuilder.getOne.mockResolvedValue({
                 ...imageMessage,
                 sender: mockUser,
             });

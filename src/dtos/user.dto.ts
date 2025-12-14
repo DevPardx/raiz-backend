@@ -48,6 +48,12 @@ export class LoginUserDto {
     password: string;
 }
 
+export class LogoutDto {
+    @IsString({ message: "validation:refresh_token_required" })
+    @IsNotEmpty({ message: "validation:refresh_token_required" })
+    refreshToken: string;
+}
+
 export class ChangePasswordDto {
     @IsString({ message: "validation:current_password_required" })
     @IsNotEmpty({ message: "validation:current_password_required" })

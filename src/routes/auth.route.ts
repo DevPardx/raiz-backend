@@ -6,6 +6,7 @@ import {
     ConfirmPasswordDto,
     ForgotPasswordDto,
     LoginUserDto,
+    LogoutDto,
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
@@ -56,7 +57,7 @@ router.get("/reset-password/:token", passwordResetLimiter, AuthController.valida
 
 router.post("/login", authLimiter, validateDto(LoginUserDto), AuthController.login);
 
-router.post("/logout", AuthController.logout);
+router.post("/logout", validateDto(LogoutDto), AuthController.logout);
 
 router.post("/refresh-token", AuthController.refreshToken);
 

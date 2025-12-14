@@ -19,6 +19,8 @@ interface EnvConfig {
 
     JWT_SECRET: string;
     JWT_REFRESH_SECRET: string;
+    JWT_EXPIRATION: string;
+    JWT_REFRESH_EXPIRATION: string;
 
     SMTP_HOST: string;
     SMTP_PORT: number;
@@ -32,6 +34,12 @@ interface EnvConfig {
     VAPID_PUBLIC_KEY: string;
     VAPID_PRIVATE_KEY: string;
     VAPID_SUBJECT: string;
+
+    VERIFICATION_TOKEN_EXPIRATION_HOURS: number;
+    PASSWORD_RESET_TOKEN_EXPIRATION_HOURS: number;
+    MAX_FILE_UPLOAD_SIZE: number;
+    MAIL_FROM_ADDRESS: string;
+    MAIL_FROM_NAME: string;
 }
 
 const requiredEnvVars: (keyof EnvConfig)[] = [
@@ -52,6 +60,8 @@ const requiredEnvVars: (keyof EnvConfig)[] = [
 
     "JWT_SECRET",
     "JWT_REFRESH_SECRET",
+    "JWT_EXPIRATION",
+    "JWT_REFRESH_EXPIRATION",
 
     "SMTP_HOST",
     "SMTP_PORT",
@@ -141,6 +151,8 @@ export const env: EnvConfig = {
 
     JWT_SECRET: process.env.JWT_SECRET!,
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
+    JWT_EXPIRATION: process.env.JWT_EXPIRATION!,
+    JWT_REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION!,
 
     SMTP_HOST: process.env.SMTP_HOST!,
     SMTP_PORT: +process.env.SMTP_PORT!,
@@ -154,4 +166,16 @@ export const env: EnvConfig = {
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY!,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY!,
     VAPID_SUBJECT: process.env.VAPID_SUBJECT!,
+
+    VERIFICATION_TOKEN_EXPIRATION_HOURS: process.env.VERIFICATION_TOKEN_EXPIRATION_HOURS
+        ? +process.env.VERIFICATION_TOKEN_EXPIRATION_HOURS
+        : 24,
+    PASSWORD_RESET_TOKEN_EXPIRATION_HOURS: process.env.PASSWORD_RESET_TOKEN_EXPIRATION_HOURS
+        ? +process.env.PASSWORD_RESET_TOKEN_EXPIRATION_HOURS
+        : 1,
+    MAX_FILE_UPLOAD_SIZE: process.env.MAX_FILE_UPLOAD_SIZE
+        ? +process.env.MAX_FILE_UPLOAD_SIZE
+        : 10485760,
+    MAIL_FROM_ADDRESS: process.env.MAIL_FROM_ADDRESS || "no-reply@raizsv.com",
+    MAIL_FROM_NAME: process.env.MAIL_FROM_NAME || "Raiz Real Estate",
 };
