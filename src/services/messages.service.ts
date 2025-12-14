@@ -72,10 +72,12 @@ export class MessagesService {
 
         await this.getConversationRepository().save(conversation);
 
-        const fullMessage = await this.getMessagesRepository().findOne({
-            where: { id: savedMessage.id },
-            relations: ["sender"],
-        });
+        // Optimized: Single query with relations instead of N+1
+        const fullMessage = await this.getMessagesRepository()
+            .createQueryBuilder("message")
+            .leftJoinAndSelect("message.sender", "sender")
+            .where("message.id = :id", { id: savedMessage.id })
+            .getOne();
 
         const recipientId =
             conversation.buyerId === userId ? conversation.sellerId : conversation.buyerId;

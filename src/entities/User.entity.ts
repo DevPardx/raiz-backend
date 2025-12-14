@@ -5,6 +5,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     OneToMany,
+    Index,
 } from "typeorm";
 import { Property } from "./Property.entity";
 import { Favorites } from "./Favorites.entity";
@@ -16,6 +17,8 @@ import { VerificationToken } from "./VerificationToken.entity";
 import { UserRole } from "../enums";
 
 @Entity("users")
+@Index("idx_users_email", ["email"])
+@Index("idx_users_verified", ["verified"])
 export class User {
     @PrimaryGeneratedColumn("uuid")
     id: string;
