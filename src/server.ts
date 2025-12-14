@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { AppDataSource } from "./config/typeorm.config";
+import { connectRedis } from "./config/redis.config";
 import logger from "./utils/logger.util";
 import { errorHandler } from "./middleware/error.middleware";
 import { languageMiddleware } from "./middleware/language.middleware";
@@ -28,17 +29,20 @@ app.use(languageMiddleware);
 
 app.use("/api/", generalLimiter);
 
-const connectDB = async () => {
+const initializeServices = async () => {
     try {
         await AppDataSource.initialize();
         logger.info("Database connected successfully");
+
+        await connectRedis();
+        logger.info("Redis connected successfully");
     } catch (error) {
-        logger.error(`Database connection failed: ${error}`);
+        logger.error(`Service initialization failed: ${error}`);
         process.exit(1);
     }
 };
 
-connectDB();
+initializeServices();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertiesRoutes);

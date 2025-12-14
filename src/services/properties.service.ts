@@ -16,6 +16,7 @@ import { NotFoundError, ForbiddenError } from "../handler/error.handler";
 import { AppDataSource } from "../config/typeorm.config";
 import { PropertyStatus } from "../enums";
 import { uploadMultipleImages, deleteMultipleImages } from "../utils/cloudinary.util";
+import { CacheUtil } from "../utils/cache.util";
 
 export class PropertiesService {
     private static getPropertyRepository(): Repository<Property> {
@@ -147,7 +148,20 @@ export class PropertiesService {
     };
 
     static getPropertyById = async (id: string, t: TFunction) => {
-        // Atomically increment view count
+        const cacheKey = `property:${id}`;
+
+        const cachedProperty = await CacheUtil.get(cacheKey);
+        if (cachedProperty) {
+            await this.getPropertyRepository()
+                .createQueryBuilder()
+                .update(Property)
+                .set({ viewsCount: () => "views_count + 1" })
+                .where("id = :id", { id })
+                .execute();
+
+            return cachedProperty;
+        }
+
         await this.getPropertyRepository()
             .createQueryBuilder()
             .update(Property)
@@ -155,7 +169,6 @@ export class PropertiesService {
             .where("id = :id", { id })
             .execute();
 
-        // Fetch property with relations after updating view count
         const property = await this.getPropertyRepository().findOne({
             where: { id },
             relations: ["images", "user"],
@@ -165,7 +178,7 @@ export class PropertiesService {
             throw new NotFoundError(t("property_not_found"));
         }
 
-        return {
+        const propertyData = {
             id: property.id,
             title: property.title,
             description: property.description,
@@ -197,6 +210,10 @@ export class PropertiesService {
                 profilePicture: property.user.profilePicture,
             },
         };
+
+        await CacheUtil.set(cacheKey, propertyData, 300);
+
+        return propertyData;
     };
 
     static getPropertiesInBounds = async (query: MapBoundsQueryDto) => {
@@ -396,6 +413,13 @@ export class PropertiesService {
     static getFeaturedProperties = async (query: GetFeaturedPropertiesQueryDto) => {
         const { page = 1, limit = 20 } = query;
 
+        const cacheKey = `featured:page:${page}:limit:${limit}`;
+
+        const cachedData = await CacheUtil.get(cacheKey);
+        if (cachedData) {
+            return cachedData;
+        }
+
         const skip = (page - 1) * limit;
 
         const where: FindOptionsWhere<Property> = {
@@ -417,7 +441,7 @@ export class PropertiesService {
         const hasNextPage = page < totalPages;
         const hasPreviousPage = page > 1;
 
-        return {
+        const result = {
             data: properties.map((property) => ({
                 id: property.id,
                 title: property.title,
@@ -458,6 +482,10 @@ export class PropertiesService {
                 hasPreviousPage,
             },
         };
+
+        await CacheUtil.set(cacheKey, result, 900);
+
+        return result;
     };
 
     static getMyProperties = async (userId: string, query: GetMyPropertiesQueryDto) => {
@@ -621,6 +649,11 @@ export class PropertiesService {
             property.images = await this.getPropertyImageRepository().save(imageEntities);
         }
 
+        await CacheUtil.del(`property:${propertyId}`);
+        if (property.isFeatured) {
+            await CacheUtil.invalidatePattern("featured:*");
+        }
+
         return t("property_updated");
     };
 
@@ -645,6 +678,11 @@ export class PropertiesService {
 
         await this.getPropertyRepository().remove(property);
 
+        await CacheUtil.del(`property:${propertyId}`);
+        if (property.isFeatured) {
+            await CacheUtil.invalidatePattern("featured:*");
+        }
+
         return t("property_deleted");
     };
 
@@ -668,6 +706,13 @@ export class PropertiesService {
 
         property.status = statusData.status;
         await this.getPropertyRepository().save(property);
+
+        // Invalidate cache for this property
+        await CacheUtil.del(`property:${propertyId}`);
+        // Invalidate featured properties cache if this is a featured property
+        if (property.isFeatured) {
+            await CacheUtil.invalidatePattern("featured:*");
+        }
 
         return t("property_status_updated");
     };

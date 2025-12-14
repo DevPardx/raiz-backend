@@ -31,6 +31,33 @@ jest.mock("../../../config/cloudinary.config", () => ({
     cloudinary: {},
 }));
 
+jest.mock("../../../config/redis.config", () => ({
+    redisClient: {
+        get: jest.fn(),
+        set: jest.fn(),
+        setEx: jest.fn(),
+        del: jest.fn(),
+        keys: jest.fn(),
+        exists: jest.fn(),
+        expire: jest.fn(),
+        isOpen: false,
+    },
+    connectRedis: jest.fn(),
+    disconnectRedis: jest.fn(),
+}));
+
+jest.mock("../../../utils/cache.util", () => ({
+    CacheUtil: {
+        get: jest.fn().mockResolvedValue(null),
+        set: jest.fn().mockResolvedValue(undefined),
+        del: jest.fn().mockResolvedValue(undefined),
+        delMany: jest.fn().mockResolvedValue(undefined),
+        invalidatePattern: jest.fn().mockResolvedValue(undefined),
+        exists: jest.fn().mockResolvedValue(false),
+        expire: jest.fn().mockResolvedValue(undefined),
+    },
+}));
+
 describe("PATCH /api/properties/:id/status", () => {
     let app: express.Application;
 

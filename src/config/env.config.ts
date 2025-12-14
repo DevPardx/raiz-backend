@@ -10,6 +10,10 @@ interface EnvConfig {
     POSTGRES_HOST: string;
     POSTGRES_PORT: string;
 
+    REDIS_HOST: string;
+    REDIS_PORT: number;
+    REDIS_PASSWORD: string;
+
     NODE_ENV: string;
     PORT: string;
 
@@ -38,6 +42,10 @@ const requiredEnvVars: (keyof EnvConfig)[] = [
     "POSTGRES_PASSWORD",
     "POSTGRES_HOST",
     "POSTGRES_PORT",
+
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_PASSWORD",
 
     "NODE_ENV",
     "PORT",
@@ -123,6 +131,10 @@ export const env: EnvConfig = {
     POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD!,
     POSTGRES_HOST: process.env.POSTGRES_HOST!,
     POSTGRES_PORT: process.env.POSTGRES_PORT!,
+
+    REDIS_HOST: process.env.REDIS_HOST!,
+    REDIS_PORT: +process.env.REDIS_PORT!,
+    REDIS_PASSWORD: process.env.REDIS_PASSWORD!,
 
     NODE_ENV: process.env.NODE_ENV!,
     PORT: process.env.PORT!,
