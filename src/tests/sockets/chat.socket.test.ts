@@ -11,13 +11,14 @@ jest.mock("../../utils/logger.util", () => ({
     },
 }));
 
-import { Server as SocketIOServer, Socket } from "socket.io";
+import { Server as SocketIOServer } from "socket.io";
+import { AuthenticatedSocket } from "../../sockets/socket.middleware";
 import { ConversationsService } from "../../services/conversations.service";
 import { MessagesService } from "../../services/messages.service";
 import { setupChatSocketHandlers as setupChatHandlers } from "../../sockets/chat.socket";
 
 describe("Chat Socket Handlers", () => {
-    let mockSocket: Partial<Socket & { user?: { id: string; email: string }; userId?: string }>;
+    let mockSocket: Partial<AuthenticatedSocket & { user?: { id: string; email: string } }>;
     let mockIo: Partial<SocketIOServer>;
     let mockUser: { id: string; email: string };
 
@@ -40,9 +41,11 @@ describe("Chat Socket Handlers", () => {
         };
 
         mockIo = {
-            on: jest.fn().mockImplementation((event: string, cb: (socket: Socket) => void) => {
-                if (event === "connection") cb(mockSocket as Socket);
-            }),
+            on: jest
+                .fn()
+                .mockImplementation((event: string, cb: (socket: AuthenticatedSocket) => void) => {
+                    if (event === "connection") cb(mockSocket as AuthenticatedSocket);
+                }),
             to: jest.fn().mockReturnThis(),
             emit: jest.fn(),
         };

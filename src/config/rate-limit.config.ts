@@ -1,7 +1,8 @@
 import rateLimit, { RateLimitRequestHandler } from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 import { Request, Response } from "express";
-import { redisClient } from "./redis.config";
+import { redisClient, connectRedis } from "./redis.config";
+import logger from "../utils/logger.util";
 
 const createRateLimiter = (
     windowMs: number,
@@ -15,9 +16,22 @@ const createRateLimiter = (
         standardHeaders: true,
         legacyHeaders: false,
         skipSuccessfulRequests,
-        store: new RedisStore({
-            sendCommand: (...args: string[]) => redisClient.sendCommand(args),
-        }),
+        store: (() => {
+            if (redisClient.isOpen) {
+                return new RedisStore({
+                    sendCommand: async (...args: unknown[]) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        return (redisClient.sendCommand as any)(args as any);
+                    },
+                });
+            }
+
+            connectRedis().catch((err) => {
+                logger.warn("Rate limiter: unable to connect to Redis, using in-memory store", err);
+            });
+
+            return undefined;
+        })(),
         handler: (req: Request, res: Response) => {
             const message = req.t ? req.t(translationKey) : translationKey;
             res.status(429).json({
