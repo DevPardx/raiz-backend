@@ -13,26 +13,48 @@ import {
     VerifyAccountDto,
 } from "../dtos/user.dto";
 import { AuthController } from "../controllers/auth.controller";
+import {
+    authLimiter,
+    passwordResetLimiter,
+    emailVerificationLimiter,
+    uploadLimiter,
+} from "../config/rate-limit.config";
 
 const router = Router();
 
-router.post("/register", validateDto(RegisterUserDto), AuthController.register);
+router.post("/register", authLimiter, validateDto(RegisterUserDto), AuthController.register);
 
-router.post("/verify-account", validateDto(VerifyAccountDto), AuthController.verifyAccount);
+router.post(
+    "/verify-account",
+    emailVerificationLimiter,
+    validateDto(VerifyAccountDto),
+    AuthController.verifyAccount,
+);
 
 router.post(
     "/resend-verification-code",
+    emailVerificationLimiter,
     validateDto(ResendVerificationCodeDto),
     AuthController.resendVerificationCode,
 );
 
-router.post("/forgot-password", validateDto(ForgotPasswordDto), AuthController.forgotPassword);
+router.post(
+    "/forgot-password",
+    passwordResetLimiter,
+    validateDto(ForgotPasswordDto),
+    AuthController.forgotPassword,
+);
 
-router.post("/reset-password/:token", validateDto(ResetPasswordDto), AuthController.resetPassword);
+router.post(
+    "/reset-password/:token",
+    passwordResetLimiter,
+    validateDto(ResetPasswordDto),
+    AuthController.resetPassword,
+);
 
-router.get("/reset-password/:token", AuthController.validateResetToken);
+router.get("/reset-password/:token", passwordResetLimiter, AuthController.validateResetToken);
 
-router.post("/login", validateDto(LoginUserDto), AuthController.login);
+router.post("/login", authLimiter, validateDto(LoginUserDto), AuthController.login);
 
 router.post("/logout", AuthController.logout);
 
@@ -52,7 +74,13 @@ router.post(
     AuthController.confirmPassword,
 );
 
-router.put("/update-user", authenticate, validateDto(UpdateUserDto), AuthController.updateUser);
+router.put(
+    "/update-user",
+    authenticate,
+    uploadLimiter,
+    validateDto(UpdateUserDto),
+    AuthController.updateUser,
+);
 
 router.get("/get-user", authenticate, AuthController.getUser);
 

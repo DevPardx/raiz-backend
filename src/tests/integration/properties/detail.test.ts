@@ -24,6 +24,14 @@ jest.mock("../../../config/cloudinary.config", () => ({
     cloudinary: {},
 }));
 
+jest.mock("socket.io", () => ({
+    Server: jest.fn().mockImplementation(() => ({
+        use: jest.fn(),
+        on: jest.fn(),
+        emit: jest.fn(),
+    })),
+}));
+
 // Import after mocks are set up
 import { errorHandler } from "../../../middleware/error.middleware";
 import { languageMiddleware } from "../../../middleware/language.middleware";
@@ -36,6 +44,12 @@ describe("GET /api/properties/:id", () => {
     const mockPropertyRepository = {
         findOne: jest.fn(),
         save: jest.fn(),
+        createQueryBuilder: jest.fn().mockReturnValue({
+            update: jest.fn().mockReturnThis(),
+            set: jest.fn().mockReturnThis(),
+            where: jest.fn().mockReturnThis(),
+            execute: jest.fn().mockResolvedValue({ affected: 1 }),
+        }),
     };
 
     const mockProperty = {
@@ -103,8 +117,8 @@ describe("GET /api/properties/:id", () => {
     describe("successful requests", () => {
         it("should return property by id and increment viewsCount", async () => {
             // Arrange
-            mockPropertyRepository.findOne.mockResolvedValue(mockProperty);
-            mockPropertyRepository.save.mockResolvedValue({
+            // After atomic update, findOne should return updated viewsCount
+            mockPropertyRepository.findOne.mockResolvedValue({
                 ...mockProperty,
                 viewsCount: 11,
             });
@@ -125,11 +139,8 @@ describe("GET /api/properties/:id", () => {
             expect(response.body).toHaveProperty("user");
             expect(response.body.user).toHaveProperty("id", "user-uuid-1");
 
-            // Verify viewsCount was incremented and saved
-            expect(mockPropertyRepository.save).toHaveBeenCalledWith({
-                ...mockProperty,
-                viewsCount: 11,
-            });
+            // Verify createQueryBuilder was called for atomic update
+            expect(mockPropertyRepository.createQueryBuilder).toHaveBeenCalled();
         });
 
         it("should return property data structure with all fields", async () => {

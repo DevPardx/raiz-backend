@@ -49,5 +49,13 @@
     "subscription_not_found": "Suscripción a notificaciones push no encontrada.",
     "test_notification_title": "Notificación de Prueba",
     "test_notification_body": "Esta es una notificación de prueba de Raíz Bienes Raíces.",
-    "test_notification_sent": "Notificación de prueba enviada exitosamente."
+    "test_notification_sent": "Notificación de prueba enviada exitosamente.",
+    "rate_limit_general": "Demasiadas solicitudes desde esta IP, por favor intenta más tarde.",
+    "rate_limit_auth": "Demasiados intentos de autenticación, por favor intenta después de 15 minutos.",
+    "rate_limit_password_reset": "Demasiados intentos de restablecimiento de contraseña, por favor intenta después de 1 hora.",
+    "rate_limit_email_verification": "Demasiadas solicitudes de verificación, por favor intenta después de 1 hora.",
+    "rate_limit_upload": "Demasiadas solicitudes de carga, por favor intenta más tarde.",
+    "rate_limit_message": "Estás enviando mensajes muy rápido, por favor reduce la velocidad.",
+    "rate_limit_create_property": "Demasiadas propiedades creadas, por favor intenta más tarde.",
+    "rate_limit_search": "Demasiadas solicitudes de búsqueda, por favor intenta más tarde."
 }

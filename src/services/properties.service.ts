@@ -147,6 +147,15 @@ export class PropertiesService {
     };
 
     static getPropertyById = async (id: string, t: TFunction) => {
+        // Atomically increment view count
+        await this.getPropertyRepository()
+            .createQueryBuilder()
+            .update(Property)
+            .set({ viewsCount: () => "views_count + 1" })
+            .where("id = :id", { id })
+            .execute();
+
+        // Fetch property with relations after updating view count
         const property = await this.getPropertyRepository().findOne({
             where: { id },
             relations: ["images", "user"],
@@ -155,9 +164,6 @@ export class PropertiesService {
         if (!property) {
             throw new NotFoundError(t("property_not_found"));
         }
-
-        property.viewsCount += 1;
-        await this.getPropertyRepository().save(property);
 
         return {
             id: property.id,

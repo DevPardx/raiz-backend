@@ -12,6 +12,7 @@ import {
 } from "../dtos/property.dto";
 import { PropertiesController } from "../controllers/properties.controller";
 import { authenticate } from "../middleware/auth.middleware";
+import { createPropertyLimiter, uploadLimiter, searchLimiter } from "../config/rate-limit.config";
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.get(
 );
 router.get(
     "/search",
+    searchLimiter,
     validateQuery(SearchPropertiesQueryDto),
     PropertiesController.searchProperties,
 );
@@ -37,10 +39,17 @@ router.get(
     validateQuery(GetMyPropertiesQueryDto),
     PropertiesController.getMyProperties,
 );
-router.post("/", authenticate, validateDto(CreatePropertyDto), PropertiesController.createProperty);
+router.post(
+    "/",
+    authenticate,
+    createPropertyLimiter,
+    validateDto(CreatePropertyDto),
+    PropertiesController.createProperty,
+);
 router.put(
     "/:id",
     authenticate,
+    uploadLimiter,
     validateDto(UpdatePropertyDto),
     PropertiesController.updateProperty,
 );

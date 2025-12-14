@@ -1,5 +1,7 @@
 import "./i18n";
 import express from "express";
+import cors from "cors";
+import helmet from "helmet";
 import { AppDataSource } from "./config/typeorm.config";
 import logger from "./utils/logger.util";
 import { errorHandler } from "./middleware/error.middleware";
@@ -9,12 +11,22 @@ import propertiesRoutes from "./routes/properties.route";
 import favoritesRoutes from "./routes/favorites.route";
 import conversationsRoutes from "./routes/conversations.route";
 import notificationsRoutes from "./routes/notifications.route";
+import { corsConfig } from "./config/cors.config";
+import { generalLimiter } from "./config/rate-limit.config";
 
 const app = express();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cors(corsConfig));
+app.use(
+    helmet({
+        contentSecurityPolicy: true,
+    }),
+);
 app.use(languageMiddleware);
+
+app.use("/api/", generalLimiter);
 
 const connectDB = async () => {
     try {
