@@ -177,5 +177,5 @@ export const env: EnvConfig = {
         ? +process.env.MAX_FILE_UPLOAD_SIZE
         : 10485760,
     MAIL_FROM_ADDRESS: process.env.MAIL_FROM_ADDRESS || "no-reply@raizsv.com",
-    MAIL_FROM_NAME: process.env.MAIL_FROM_NAME || "Raiz Real Estate",
+    MAIL_FROM_NAME: process.env.MAIL_FROM_NAME || "Raíz Real Estate",
 };

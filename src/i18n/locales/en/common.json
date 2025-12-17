@@ -48,7 +48,7 @@
     "subscription_deleted": "Successfully unsubscribed from push notifications.",
     "subscription_not_found": "Push notification subscription not found.",
     "test_notification_title": "Test Notification",
-    "test_notification_body": "This is a test notification from Raiz Real Estate.",
+    "test_notification_body": "This is a test notification from Raíz Real Estate.",
     "test_notification_sent": "Test notification sent successfully.",
     "rate_limit_general": "Too many requests from this IP, please try again later.",
     "rate_limit_auth": "Too many authentication attempts, please try again after 15 minutes.",
