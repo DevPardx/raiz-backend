@@ -4,7 +4,6 @@ import {
     ConfirmPasswordDto,
     ForgotPasswordDto,
     LoginUserDto,
-    LogoutDto,
     RegisterUserDto,
     ResendVerificationCodeDto,
     ResetPasswordDto,
@@ -78,8 +77,23 @@ export class AuthController {
     static login = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userData: LoginUserDto = req.body;
-            const result = await AuthService.login(userData, req.t);
-            res.status(200).json(result);
+            const { accessToken, refreshToken } = await AuthService.login(userData, req.t);
+
+            res.cookie("accessToken", accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 15 * 60 * 1000,
+            });
+
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+
+            res.status(200).json();
         } catch (error) {
             next(error);
         }
@@ -87,9 +101,30 @@ export class AuthController {
 
     static logout = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const logoutData: LogoutDto = req.body;
-            const result = await AuthService.logout(logoutData.refreshToken, req.t);
-            res.status(200).json(result);
+            const refreshToken = req.cookies.refreshToken;
+
+            if (refreshToken) {
+                try {
+                    await AuthService.logout(refreshToken, req.t);
+                } catch {
+                    // Ignore errors from service (token not found in DB, etc.)
+                    // We still want to clear the cookies on the client side
+                }
+            }
+
+            res.clearCookie("accessToken", {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+            });
+
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+            });
+
+            res.status(200).send();
         } catch (error) {
             next(error);
         }
@@ -97,9 +132,23 @@ export class AuthController {
 
     static refreshToken = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { refreshToken } = req.body;
-            const result = await AuthService.refreshToken(refreshToken, req.t);
-            res.status(200).json(result);
+            const refreshToken = req.cookies.refreshToken;
+
+            if (!refreshToken) {
+                res.status(401).json({ error: "Refresh token not found" });
+                return;
+            }
+
+            const { accessToken } = await AuthService.refreshToken(refreshToken, req.t);
+
+            res.cookie("accessToken", accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 15 * 60 * 1000,
+            });
+
+            res.status(200).json();
         } catch (error) {
             next(error);
         }

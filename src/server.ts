@@ -2,6 +2,7 @@ import "./i18n";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { AppDataSource } from "./config/typeorm.config";
 import { connectRedis } from "./config/redis.config";
 import logger from "./utils/logger.util";
@@ -19,6 +20,7 @@ const app = express();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cookieParser());
 app.use(cors(corsConfig));
 app.use(
     helmet({
