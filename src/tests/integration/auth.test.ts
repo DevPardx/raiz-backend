@@ -1,5 +1,6 @@
 import request from "supertest";
 import express from "express";
+import cookieParser from "cookie-parser";
 import { AppDataSource } from "../../config/typeorm.config";
 import { transporter } from "../../config/email.config";
 import { UserRole } from "../../enums";
@@ -927,6 +928,7 @@ describe("POST /api/auth/login", () => {
     beforeAll(() => {
         app = express();
         app.use(express.json());
+        app.use(cookieParser());
         app.use(languageMiddleware);
 
         const router = Router();
@@ -975,8 +977,16 @@ describe("POST /api/auth/login", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("accessToken");
-        expect(response.body).toHaveProperty("refreshToken");
+        expect(response.headers["set-cookie"]).toBeDefined();
+
+        const cookies = response.headers["set-cookie"] as string[];
+        const accessTokenCookie = cookies.find((cookie) => cookie.startsWith("accessToken="));
+        const refreshTokenCookie = cookies.find((cookie) => cookie.startsWith("refreshToken="));
+
+        expect(accessTokenCookie).toBeDefined();
+        expect(refreshTokenCookie).toBeDefined();
+        expect(accessTokenCookie).toContain("HttpOnly");
+        expect(refreshTokenCookie).toContain("HttpOnly");
     });
 
     it("should return 400 for missing email", async () => {
@@ -1064,6 +1074,7 @@ describe("POST /api/auth/logout", () => {
     beforeAll(() => {
         app = express();
         app.use(express.json());
+        app.use(cookieParser());
         app.use(languageMiddleware);
 
         const router = Router();
@@ -1094,21 +1105,35 @@ describe("POST /api/auth/logout", () => {
         mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
         mockRefreshTokenRepository.delete.mockResolvedValue({ affected: 1 });
 
-        const response = await request(app).post("/api/auth/logout").send({
-            refreshToken: "valid_refresh_token",
-        });
+        const response = await request(app)
+            .post("/api/auth/logout")
+            .set("Cookie", ["refreshToken=valid_refresh_token"]);
 
         expect(response.status).toBe(200);
+
+        const cookies = response.headers["set-cookie"] as string[];
+        const accessTokenCookie = cookies?.find((cookie) => cookie.startsWith("accessToken="));
+        const refreshTokenCookie = cookies?.find((cookie) => cookie.startsWith("refreshToken="));
+
+        expect(accessTokenCookie).toContain("accessToken=;");
+        expect(refreshTokenCookie).toContain("refreshToken=;");
     });
 
-    it("should return 404 for invalid refresh token", async () => {
+    it("should return 200 even with invalid refresh token (clears cookies)", async () => {
         mockRefreshTokenRepository.findOne.mockResolvedValue(null);
 
-        const response = await request(app).post("/api/auth/logout").send({
-            refreshToken: "invalid_token",
-        });
+        const response = await request(app)
+            .post("/api/auth/logout")
+            .set("Cookie", ["refreshToken=invalid_token"]);
 
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+
+        const cookies = response.headers["set-cookie"] as string[];
+        const accessTokenCookie = cookies?.find((cookie) => cookie.startsWith("accessToken="));
+        const refreshTokenCookie = cookies?.find((cookie) => cookie.startsWith("refreshToken="));
+
+        expect(accessTokenCookie).toContain("accessToken=;");
+        expect(refreshTokenCookie).toContain("refreshToken=;");
     });
 });
 
@@ -1123,6 +1148,7 @@ describe("POST /api/auth/refresh-token", () => {
     beforeAll(() => {
         app = express();
         app.use(express.json());
+        app.use(cookieParser());
         app.use(languageMiddleware);
 
         const router = Router();
@@ -1162,12 +1188,17 @@ describe("POST /api/auth/refresh-token", () => {
 
         mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
 
-        const response = await request(app).post("/api/auth/refresh-token").send({
-            refreshToken: "valid_refresh_token",
-        });
+        const response = await request(app)
+            .post("/api/auth/refresh-token")
+            .set("Cookie", ["refreshToken=valid_refresh_token"]);
 
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("accessToken");
+
+        const cookies = response.headers["set-cookie"] as string[];
+        const accessTokenCookie = cookies?.find((cookie) => cookie.startsWith("accessToken="));
+
+        expect(accessTokenCookie).toBeDefined();
+        expect(accessTokenCookie).toContain("HttpOnly");
     });
 
     it("should return 401 for invalid refresh token", async () => {
@@ -1175,9 +1206,9 @@ describe("POST /api/auth/refresh-token", () => {
             throw new Error("Invalid token");
         });
 
-        const response = await request(app).post("/api/auth/refresh-token").send({
-            refreshToken: "invalid_token",
-        });
+        const response = await request(app)
+            .post("/api/auth/refresh-token")
+            .set("Cookie", ["refreshToken=invalid_token"]);
 
         expect(response.status).toBe(401);
     });
@@ -1185,9 +1216,9 @@ describe("POST /api/auth/refresh-token", () => {
     it("should return 401 for non-existent refresh token in database", async () => {
         mockRefreshTokenRepository.findOne.mockResolvedValue(null);
 
-        const response = await request(app).post("/api/auth/refresh-token").send({
-            refreshToken: "valid_but_not_in_db",
-        });
+        const response = await request(app)
+            .post("/api/auth/refresh-token")
+            .set("Cookie", ["refreshToken=valid_but_not_in_db"]);
 
         expect(response.status).toBe(401);
     });
@@ -1203,9 +1234,9 @@ describe("POST /api/auth/refresh-token", () => {
         mockRefreshTokenRepository.findOne.mockResolvedValue(mockToken);
         mockRefreshTokenRepository.delete.mockResolvedValue({ affected: 1 });
 
-        const response = await request(app).post("/api/auth/refresh-token").send({
-            refreshToken: "expired_token",
-        });
+        const response = await request(app)
+            .post("/api/auth/refresh-token")
+            .set("Cookie", ["refreshToken=expired_token"]);
 
         expect(response.status).toBe(401);
     });

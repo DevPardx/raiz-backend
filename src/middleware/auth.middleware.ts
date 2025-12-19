@@ -16,13 +16,8 @@ declare global {
 
 export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
     try {
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedError(req.t("unauthorized"));
-        }
-
-        const token = authHeader.split(" ")[1];
+        // Read access token from httpOnly cookie
+        const token = req.cookies.accessToken;
 
         if (!token) {
             throw new UnauthorizedError(req.t("unauthorized"));
