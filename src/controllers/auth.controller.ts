@@ -107,6 +107,8 @@ export class AuthController {
                 try {
                     await AuthService.logout(refreshToken, req.t);
                 } catch {
+                    // Ignore errors from logout service - token might be invalid or already deleted
+                    // We still want to clear cookies and return success
                 }
             }
 
