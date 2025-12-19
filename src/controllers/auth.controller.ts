@@ -67,8 +67,8 @@ export class AuthController {
     static validateResetToken = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { token } = req.params;
-            const result = await AuthService.validateResetToken(token as string, req.t);
-            res.status(200).json(result);
+            await AuthService.validateResetToken(token as string, req.t);
+            res.status(200).json();
         } catch (error) {
             next(error);
         }
@@ -107,8 +107,6 @@ export class AuthController {
                 try {
                     await AuthService.logout(refreshToken, req.t);
                 } catch {
-                    // Ignore errors from service (token not found in DB, etc.)
-                    // We still want to clear the cookies on the client side
                 }
             }
 
