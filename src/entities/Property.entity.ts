@@ -62,7 +62,7 @@ export class Property {
     @Column({ type: "integer", nullable: true })
     bedrooms: number | null;
 
-    @Column({ type: "decimal", precision: 3, scale: 1, nullable: true })
+    @Column({ type: "integer", nullable: true })
     bathrooms: number | null;
 
     @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, name: "area_sqm" })
